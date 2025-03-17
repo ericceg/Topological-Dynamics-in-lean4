@@ -5,10 +5,24 @@ import Mathlib
 instance AddAction_on_inv_subset
   {M X : Type*} [AddMonoid M] [AddAction M X] {Y : Set X}
   (h_Y_inv: ∀ c : M, ∀ x : X, x ∈ Y → c +ᵥ x ∈ Y) :
-  AddAction M Y := by {
-    sorry
-  }
-
+  AddAction M Y := {
+    vadd := λ c y => ⟨c +ᵥ y.1, h_Y_inv c y.1 y.2⟩
+    zero_vadd := λ x => Subtype.ext (zero_vadd M (x : X)),
+    add_vadd := λ c₁ c₂ x => Subtype.ext (add_vadd c₁ c₂ (x : X))
+    }
+/-! EXPLANATION:
+For the explanation, we restrict ourselves to the class VAdd
+(the extension to the class AddAction should work similarly).
+The definition of the class VAdd of M on X is given by a function vadd : M → X → X.
+Hence to prove that the restriction of the action of M on Y is again of type VAdd, we need to define a function vadd : M → Y → Y.
+To do this, we need to understand how lean handles subsets.
+If Y : Set X, then the corresponding subtype Y has terms of the form ⟨y, h⟩, where y : X and h : x ∈ Y.
+This means that a subset Y of X is represented by a term of type X and a proof h of the fact x ∈ Y.
+(Credits to https://stackoverflow.com/questions/57154032/defining-a-function-to-a-subset-of-the-codomain)
+Hence to construct a function M → Y → Y, when taking intputs c : M and y : Y we need to return a term of type Y,
+i.e. something of the form ⟨y', h'⟩, where y' : X and h' : y' ∈ Y.
+This explains the definition of vadd above.
+ -/
 
 
 /-- Theorem 1.14: In a nonempty compact metric space X with an additive Action of M on X, there exists a closed,
