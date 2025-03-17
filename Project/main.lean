@@ -1,4 +1,5 @@
-import Mathlib
+import Mathlib.Dynamics.Minimal
+import Mathlib.Topology.MetricSpace.Defs
 
 
 /-- Lemma: If we have AddAction M X and Y is a subset of X that is invariant under the action of M then the restriction of the action of M on Y is an AddAction M Y -/
@@ -38,3 +39,8 @@ theorem exists_minimal_invariant_subset
    AddAction.IsMinimal M Y := by {
     sorry
    }
+
+
+/-!
+Run #min_imports at the end of the file to check necessary imports.
+-/
