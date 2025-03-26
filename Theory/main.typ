@@ -1,0 +1,176 @@
+#import "preamble.typ": *
+
+
+/* ----------------- LOAD PAPER TEMPLATE ----------------- */
+#show: paper.with(
+  title: [
+    Topological Dynamics in `Lean`
+  ],
+  authors: (
+    (
+      name: "Eric Ceglie",
+      affiliation: "ETH Zurich",
+      email: "eceglie@ethz.ch",
+    ),
+    (
+      name: "Leandro Zehnder",
+      affiliation: "ETH Zurich",
+      email: "lzehnde@ethz.ch",
+    )
+  ),
+  abstract: [#lorem(50)],
+  institution: [
+    Federal Institute of Technology Zurich \
+    Department of Mathematics
+  ],
+  toc: false,
+  chapter-style-heading: false
+)
+
+
+#set enum(numbering: "(1)")
+
+
+= Topological Dynamics 
+
+== Central Result 
+
+Let $X$ be a set and $T:X ->  X$ a map. This setting is called a _dynamical system_.
+
+#definition()[
+For any $x ∈ X$ define the _orbit_ of $x$ by $ 
+cal(O)(x) := {T^n (x) | n ∈ NN_0}.  
+$ 
+]
+
+From now on, assume that $X$ is a compact metric space and $T: X ->  X$ is continuous.
+This is called a _topological dynamical system_. 
+
+#definition()[
+$T$ is called _transitive_ if there exists a point $x_0 ∈ X$ with dense orbit, i.e. 
+if $overline(cal(O)(x_0)) = X$. 
+]
+
+#definition()[
+$T$ is called _minimal_ if every orbit is dense. 
+]
+
+
+#proposition()[
+Let $T:X ->  X$ be continuous on a compact metric space.
+Then $T$ is minimal if and only if for every closed $T$-invariant subset $E subset.eq X$ 
+we have $E = emptyset$ or $E = X$.
+]
+
+
+#theorem()[
+Let $X$ be a non-empty compact metric space and $T:X ->  X$ continuous. 
+Then there exists a closed non-empty $Y subset.eq X$ such that $T Y = Y$ 
+and $T|_Y: Y ->  Y$ is minimal. 
+]
+
+
+== Reformulation using Actions 
+
+Let $M$ be an additive monoid acting on a compact metric space $X$. 
+
+#definition()[
+For any $x ∈ X$ define the _orbit_ of $x$ by $ 
+cal(O)(x) := {m x | m ∈ M}. 
+$ 
+]
+
+#definition()[
+  $(X, M)$ is called _minimal_ if every orbit is dense.
+]
+
+#proposition()[
+$(X, M)$ is minimal if and only if for every closed $M$-invariant subset $E subset.eq X$ 
+we have $E = emptyset$ or $E = X$.
+]<prop-minimal-equivalence>
+
+#link("https://leanprover-community.github.io/mathlib_docs/dynamics/minimal.html#is_minimal_iff_closed_vadd_invariant")[`Lean` implementation:]
+
+```lean
+theorem is_minimal_iff_closed_vadd_invariant (M : Type u_1) {α : Type u_3} 
+    [add_monoid M] [topological_space α] [add_action M α] 
+    [has_continuous_const_vadd M α] :
+  add_action.is_minimal M α ↔ 
+  ∀ (s : set α), is_closed s → (∀ (c : M), c +ᵥ s ⊆ s) → s = ∅ ∨ s = set.univ
+```
+
+
+#theorem("Zorn's lemma")[
+Let $S$ be a set of subsets of a set $α$. 
+Assume that for every chain
+#footnote[
+  Recall that a chain is a totally ordered subset of a partially ordered set.
+] 
+$C subset.eq S$ there exists an element $l ∈ S$ such that $ 
+∀ s ∈ C: space  l subset.eq s. 
+$ 
+Then there exists an element $m ∈ S$ such that $ 
+∀ a ∈ S: space a subset.eq m ==> a = m. 
+$ 
+]<thm-zorn-lemma>
+
+#link("https://leanprover-community.github.io/mathlib4_docs/Mathlib/Order/Zorn.html#zorn_superset")[`Lean` implementation:]
+```lean
+theorem zorn_superset 
+    {α : Type u_1} (S : Set (Set α)) 
+    (h : ∀ c ⊆ S, IsChain (fun (x1 x2 : Set α) => x1 ⊆ x2) c 
+          → ∃ lb ∈ S, ∀ s ∈ c, lb ⊆ s) :
+  ∃ (m : Set α), Minimal (fun (x : Set α) => x ∈ S) m
+```
+
+
+#theorem()[
+Assume that $X$ is non-empty and $(X, M)$ is minimal. 
+Then there exists a closed non-empty $Y subset.eq X$ such that $M Y subset.eq Y$
+and the restricted action $ 
+M times Y ->  Y, space (m, y) |->  m y  
+$ 
+is minimal.
+]
+
+#proof()[
+Let $M$ be an additive monoid acting on a non-empty compact metric space $X$ and 
+assume that $(X, M)$ is minimal. Define the family $ 
+S := { Y subset.eq X bar Y != emptyset, space  Y "closed", space  M Y subset.eq Y}. 
+$ 
+We want to apply Zorn's lemma to find a minimal element in $cal(E)$. 
+Let $C subset.eq S$ be a chain. Define $ 
+l := inter.big_(Y ∈ C) Y . 
+$ 
+We now verify that $l ∈ S$. 
+
+- Since for all $Y ∈ C$ we have $Y subset.eq X$ we obtain $l subset.eq X$. 
+
+- Since $l$ is an intersection of closed sets it is closed. 
+
+- First observe that for every $Y ∈ C$ we have $Y ∈ S$ and thus $Y subset.eq X$ and $Y$ is closed 
+  by definition of $S$. Since $X$ is compact this implies that $Y$ is compact. 
+  Hence by #link("https://en.wikipedia.org/wiki/Cantor%27s_intersection_theorem")[Cantor's intersection theorem] we obtain $l != emptyset$. 
+
+- Let $y ∈ l$ and $m ∈ M$ be arbitrary. Then we have $ 
+∀ Y ∈ C: space  m y ∈ Y
+$
+  since $C subset.eq S$. This implies $ 
+  m y ∈ inter.big_(Y ∈ C) Y = l.  
+  $ 
+  Since $y ∈ l$ and $m ∈ M$ were arbitrary we obtain $M l subset.eq l$.
+
+This proves $l ∈ S$. Moreover, by definition of $l$ we have $ 
+∀ Y ∈ C: space  l subset.eq Y. 
+$ 
+Hence by @thm-zorn-lemma there exists an element $Y ∈ S$ such that $ 
+∀ Z ∈ S: space  Z subset.eq Y ==> Z = Y. #<eq-1>
+$ 
+Observe that since $Y ∈ S$ we have a well-defined action $ 
+M times Y ->  Y, space (m, y) |->  m y. 
+$
+We now show that $(Y, M)$ is minimal using @prop-minimal-equivalence. 
+Let $E subset.eq Y$ be closed with $M E subset.eq E$ and assume that $E != emptyset$. 
+Then we have $E ∈ S$ by definition of $S$. Hence using #<eq-1> we obtain $E = Y$. 
+This proves that $(Y, M)$ is minimal by @prop-minimal-equivalence. 
+]
