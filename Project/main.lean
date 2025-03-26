@@ -37,10 +37,16 @@ theorem exists_minimal_invariant_subset
    Y.Nonempty ∧
    AddAction.IsMinimal M Y := by {
   let S := { Y : Set X | IsClosed Y ∧ Y.Nonempty ∧ ∀ c : M, ∀ x ∈ Y, c +ᵥ x ∈ Y }
-  suffices ∃ Y ∈ S, ∀ Z ∈ S, Y ⊆ Z → Y = Z by
+  suffices ∃ Y ∈ S, ∀ Z ∈ S, Y ⊆ Z → Y = Z by {
+    simp_all only [exists_and_left]
+    obtain ⟨Y, hY, hY_maximal⟩ := this
+    use Y
+    aesop
+    have AddAction_M_Y : AddAction M Y := AddAction_on_inv_subset hY.2.2
     sorry
-  apply zorn_superset at S
-  unfold Minimal at S
+  }
+  apply zorn_subset at S
+  unfold Maximal at S
   have hc := S (
     by
     intro c
@@ -52,12 +58,11 @@ theorem exists_minimal_invariant_subset
   obtain ⟨Y, hY, hY_maximal⟩ := hc
   use Y, hY
   intro Z hZ
-  intro h_subset
-  let h_leq_implies_geq := hY_maximal hZ
-
+  intro h_Y_subset_Z
+  exact Set.Subset.antisymm h_Y_subset_Z (hY_maximal hZ h_Y_subset_Z)
   }
   -- let existence_minimal_element := S sorry
-  }
+
 
 
 /-!
