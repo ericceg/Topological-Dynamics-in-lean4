@@ -1,5 +1,4 @@
-import Mathlib.Dynamics.Minimal
-import Mathlib.Topology.MetricSpace.Defs
+import Mathlib
 
 
 /-- Lemma: If we have AddAction M X and Y is a subset of X that is invariant under the action of M then the restriction of the action of M on Y is an AddAction M Y -/
@@ -37,8 +36,28 @@ theorem exists_minimal_invariant_subset
    IsClosed Y ∧
    Y.Nonempty ∧
    AddAction.IsMinimal M Y := by {
+  let S := { Y : Set X | IsClosed Y ∧ Y.Nonempty ∧ ∀ c : M, ∀ x ∈ Y, c +ᵥ x ∈ Y }
+  suffices ∃ Y ∈ S, ∀ Z ∈ S, Y ⊆ Z → Y = Z by
     sorry
-   }
+  apply zorn_superset at S
+  unfold Minimal at S
+  have hc := S (
+    by
+    intro c
+    intro h
+    intro h_is_chain
+    sorry
+  )
+
+  obtain ⟨Y, hY, hY_maximal⟩ := hc
+  use Y, hY
+  intro Z hZ
+  intro h_subset
+  let h_leq_implies_geq := hY_maximal hZ
+
+  }
+  -- let existence_minimal_element := S sorry
+  }
 
 
 /-!
