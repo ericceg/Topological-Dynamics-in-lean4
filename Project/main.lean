@@ -25,12 +25,16 @@ This explains the definition of vadd above.
  -/
 
 
+
+open AddAction Set
+open Pointwise -- necessary for `have : ∀ (E : Set Y), IsClosed E → (∀ (c : M), c +ᵥ E ⊆ E) → E = ∅ ∨ E = univ := sorry` to make sense
+
 /-- Theorem 1.14: In a nonempty compact metric space X with an additive Action of M on X, there exists a closed,
 nonempty subset Y such that Y is M-invariant and the restricted action of M on Y is minimal.
 Todo: Think about additional assumptions about the action (e.g. continuity). Maybe even consider a continuous groupaction (induced by a homeomorphism on X).
  -/
 theorem exists_minimal_invariant_subset
-  {M X : Type*} [MetricSpace X] [CompactSpace X] [Nonempty X] [AddMonoid M] [AddAction M X] [ContinuousConstVAdd M X] :
+  {M X : Type*} [TopologicalSpace X] [CompactSpace X] [Nonempty X] [AddMonoid M] [AddAction M X] [ContinuousConstVAdd M X] :
    ∃ (Y : Set X) (hY_inv : ∀ c : M, ∀ x ∈ Y, c +ᵥ x ∈ Y),
    have : AddAction M Y := AddAction_on_inv_subset hY_inv
    IsClosed Y ∧
@@ -43,7 +47,10 @@ theorem exists_minimal_invariant_subset
     use Y
     aesop
     have AddAction_M_Y : AddAction M Y := AddAction_on_inv_subset hY.2.2
-    sorry
+    have C_AddAction_M_Y : ContinuousConstVAdd M Y := sorry
+    have RHS : ∀ (E : Set Y), IsClosed E → (∀ (c : M), c +ᵥ E ⊆ E) → E = ∅ ∨ E = univ := sorry
+    have h1 := @isMinimal_iff_isClosed_vadd_invariant M Y inst_3 -- IMPORTANT: Here we need to use @ infront of isMinimal_iff_isClosed_vadd_invariant to allows us to explicitly provde the optional argument (topological space α in thise case).
+
   }
   apply zorn_subset at S
   unfold Maximal at S
