@@ -36,7 +36,7 @@ Todo: Think about additional assumptions about the action (e.g. continuity). May
 theorem exists_minimal_invariant_subset
   {M X : Type*} [TopologicalSpace X] [CompactSpace X] [Nonempty X] [AddMonoid M] [AddAction M X] [ContinuousConstVAdd M X] :
    ∃ (Y : Set X) (hY_inv : ∀ c : M, ∀ x ∈ Y, c +ᵥ x ∈ Y),
-   have : AddAction M Y := AddAction_on_inv_subset hY_inv
+   have h_action_on_inv_subset : AddAction M Y := AddAction_on_inv_subset hY_inv
    IsClosed Y ∧
    Y.Nonempty ∧
    AddAction.IsMinimal M Y := by {
@@ -46,11 +46,16 @@ theorem exists_minimal_invariant_subset
     obtain ⟨Y, hY, hY_maximal⟩ := this
     use Y
     aesop
+    #check hY
+    #check hY.2
+    #check hY.2.2
     have AddAction_M_Y : AddAction M Y := AddAction_on_inv_subset hY.2.2
     have C_AddAction_M_Y : ContinuousConstVAdd M Y := sorry
     have RHS : ∀ (E : Set Y), IsClosed E → (∀ (c : M), c +ᵥ E ⊆ E) → E = ∅ ∨ E = univ := sorry
-    have h1 := @isMinimal_iff_isClosed_vadd_invariant M Y inst_3 -- IMPORTANT: Here we need to use @ infront of isMinimal_iff_isClosed_vadd_invariant to allows us to explicitly provde the optional argument (topological space α in thise case).
-
+    have h1 := @isMinimal_iff_isClosed_vadd_invariant M Y inst_3 instTopologicalSpaceSubtype AddAction_M_Y C_AddAction_M_Y -- IMPORTANT: Here we need to use @ infront of isMinimal_iff_isClosed_vadd_invariant to allows us to explicitly provde the optional argument (topological space α in thise case).
+    have h1 := @h1
+    have h2 := h1.2
+    apply h2 at RHS
   }
   apply zorn_subset at S
   unfold Maximal at S
