@@ -56,6 +56,20 @@ theorem exists_minimal_invariant_subset
     have h1 := @h1
     have h2 := h1.2
     apply h2 at RHS
+    rw [iff_mpr_iff_true_intro right]
+    -- convert RHS
+    -- rw [@AddAction.ext_iff]
+    rw [AddAction_on_inv_subset]
+    convert RHS
+    aesop
+    unfold VAdd.vadd
+    unfold toVAdd
+    unfold Subtype.val
+    rw [← @exists_subtype_mk_eq_iff]
+    let h := right x val property
+    use h
+    #check AddAction_M_Y.1.1
+
   }
   apply zorn_subset at S
   unfold Maximal at S
