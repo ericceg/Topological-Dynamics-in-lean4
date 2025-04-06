@@ -69,10 +69,18 @@ theorem exists_minimal_invariant_subset :
     use h_Y_nonempty
     use h_Y_isClosed
     #check SubAddAction.SubAction.1
-    have h_subaction_continuous : @ContinuousConstVAdd M Y instTopologicalSpaceSubtype SubAddAction.SubAction.toVAdd := by sorry
+    let h_subaction_VAdd := SubAddAction.SubAction.toVAdd
+    have h_subaction_continuous_const_vadd : ∀ m : M, Continuous fun x : Y => m +ᵥ x := by {
+      intro m
+      have h_action_continuous_on_X := h_action_continuous.continuous_const_vadd m
+
+    }
+    have h_subaction_continuous : @ContinuousConstVAdd M Y instTopologicalSpaceSubtype SubAddAction.SubAction.toVAdd := by {
+      constructor
+      · exact h_subaction_continuous_const_vadd
+    }
     have h1 := @isMinimal_iff_isClosed_vadd_invariant M Y h_M_monoid instTopologicalSpaceSubtype SubAddAction.SubAction h_subaction_continuous
     have h1 := h1.2
-    -- have RHS : ∀ (E : Set Y), IsClosed E → (∀ (c : M), c +ᵥ E ⊆ E) → E = ∅ ∨ E = univ := by sorry
     apply h1
     intro E
     intro hE_isClosed
