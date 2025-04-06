@@ -70,15 +70,16 @@ theorem exists_minimal_invariant_subset :
     }
     exact AddAction_on_Y
     use SubAddAction
-    have AddAction_on_Y := SubAddAction.SubAction
     use h_Y_nonempty
     use h_Y_isClosed
     #check SubAddAction.SubAction.1
-    have h_subaction_continuous : ContinuousConstVAdd M Y := by sorry
-    have h1 := @isMinimal_iff_isClosed_vadd_invariant M Y h_M_monoid instTopologicalSpaceSubtype AddAction_on_Y h_subaction_continuous
+    have h_subaction_continuous : @ContinuousConstVAdd M Y instTopologicalSpaceSubtype SubAddAction.SubAction.toVAdd := by sorry
+    have h1 := @isMinimal_iff_isClosed_vadd_invariant M Y h_M_monoid instTopologicalSpaceSubtype SubAddAction.SubAction h_subaction_continuous
     have h1 := h1.2
-    have RHS : ∀ (E : Set Y), IsClosed E → (∀ (c : M), c +ᵥ E ⊆ E) → E = ∅ ∨ E = univ := sorry
-    apply h1 at RHS
-    convert RHS
+    -- have RHS : ∀ (E : Set Y), IsClosed E → (∀ (c : M), c +ᵥ E ⊆ E) → E = ∅ ∨ E = univ := by sorry
+    apply h1
+    intro E
+    intro hE_isClosed
+    intro hE_inv
 
    }
