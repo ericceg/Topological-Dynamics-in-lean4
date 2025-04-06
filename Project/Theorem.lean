@@ -33,8 +33,8 @@ theorem exists_minimal_invariant_subset :
    AddAction.IsMinimal M Y := by {
     let S := { Y : Set X | IsClosed Y ∧ Y.Nonempty ∧ ∀ c : M, ∀ x ∈ Y, c +ᵥ x ∈ Y }
     have minimal_set: ∃ Y ∈ S, ∀ Z ∈ S, Z ⊆ Y → Y = Z := by {
-      apply zorn_subset at S
-      unfold Maximal at S
+      apply zorn_superset at S
+      unfold Minimal at S
       have hc := S (
         by
         intro c
@@ -42,11 +42,12 @@ theorem exists_minimal_invariant_subset :
         intro h_is_chain
         sorry
       )
-      obtain ⟨Y, hY, hY_maximal⟩ := hc
+      obtain ⟨Y, hY, hY_minimal⟩ := hc
       use Y, hY
       intro Z hZ
       intro h_Y_subset_Z
-      exact Set.Subset.antisymm h_Y_subset_Z (hY_maximal hZ h_Y_subset_Z)
+      have h_new := hY_minimal hZ h_Y_subset_Z
+      exact Subset.antisymm (hY_minimal hZ h_Y_subset_Z) h_Y_subset_Z -- obtained this using `hint`
       }
     obtain ⟨Y, h_Y⟩ :=  minimal_set
     use Y
