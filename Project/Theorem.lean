@@ -13,7 +13,9 @@ class MySubAddAction (M : Type*) (X : Type*) (Y : Set X) [AddMonoid M] [AddActio
   SubAction : AddAction M Y
   SubAction_eq_Action: ∀ (c : M) (x : Y), ↑(c +ᵥ x) = c +ᵥ ↑x
 
-open scoped Pointwise
+open Pointwise
+
+open AddAction Set
 
 variable {M X : Type*} [h_X_top : TopologicalSpace X] [h_X_compact : CompactSpace X] [h_X_nonempty : Nonempty X]
   [h_M_monoid : AddMonoid M] [h_M_X_action : AddAction M X] [h_action_continuous : ContinuousConstVAdd M X]
@@ -48,4 +50,35 @@ theorem exists_minimal_invariant_subset :
       }
     obtain ⟨Y, h_Y⟩ :=  minimal_set
     use Y
+    have h_Y_in_S := h_Y.1
+    have h_Y_isClosed := h_Y_in_S.1
+    have h_Y_nonempty := h_Y_in_S.2.1
+    have h_Y_inv := h_Y_in_S.2.2
+    have SubAddAction : MySubAddAction M X Y
+    constructor
+    have AddAction_on_Y : AddAction M Y := {
+      vadd := λ c y => ⟨c +ᵥ y.1, h_Y_inv c y.1 y.2⟩
+      zero_vadd := λ x => Subtype.ext (zero_vadd M (x : X)),
+      add_vadd := λ c₁ c₂ x => Subtype.ext (add_vadd c₁ c₂ (x : X))
+    }
+    intro c x
+    rfl
+    have AddAction_on_Y : AddAction M Y := {
+      vadd := λ c y => ⟨c +ᵥ y.1, h_Y_inv c y.1 y.2⟩
+      zero_vadd := λ x => Subtype.ext (zero_vadd M (x : X)),
+      add_vadd := λ c₁ c₂ x => Subtype.ext (add_vadd c₁ c₂ (x : X))
+    }
+    exact AddAction_on_Y
+    use SubAddAction
+    have AddAction_on_Y := SubAddAction.SubAction
+    use h_Y_nonempty
+    use h_Y_isClosed
+    #check SubAddAction.SubAction.1
+    have h_subaction_continuous : ContinuousConstVAdd M Y := by sorry
+    have h1 := @isMinimal_iff_isClosed_vadd_invariant M Y h_M_monoid instTopologicalSpaceSubtype AddAction_on_Y h_subaction_continuous
+    have h1 := h1.2
+    have RHS : ∀ (E : Set Y), IsClosed E → (∀ (c : M), c +ᵥ E ⊆ E) → E = ∅ ∨ E = univ := sorry
+    apply h1 at RHS
+    convert RHS
+
    }
