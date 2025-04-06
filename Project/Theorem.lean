@@ -73,7 +73,10 @@ theorem exists_minimal_invariant_subset :
     have h_subaction_continuous_const_vadd : ∀ m : M, Continuous fun x : Y => m +ᵥ x := by {
       intro m
       have h_action_continuous_on_X := h_action_continuous.continuous_const_vadd m
-
+      constructor
+      intro S
+      intro h_S
+      sorry
     }
     have h_subaction_continuous : @ContinuousConstVAdd M Y instTopologicalSpaceSubtype SubAddAction.SubAction.toVAdd := by {
       constructor
@@ -90,8 +93,13 @@ theorem exists_minimal_invariant_subset :
       have h_Y_AddAction := SubAddAction.SubAction
       have h_E_in_S : ↑E ∈ S := by {
         constructor
-        · sorry
-        · sorry
+        · exact IsClosed.trans hE_isClosed h_Y_isClosed
+        · apply And.intro
+          · exact Nonempty.image Subtype.val hE
+          · intro c x
+            intro h_x_in_E
+            have h_E_inv_under_c := hE_inv c
+            sorry
       }
       let E' := Subtype.val '' E
       have h_E'_in_S : E' ∈ S := by aesop
