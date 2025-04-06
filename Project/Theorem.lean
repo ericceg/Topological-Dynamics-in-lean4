@@ -29,5 +29,23 @@ theorem exists_minimal_invariant_subset :
    Y.Nonempty ∧
    IsClosed Y ∧
    AddAction.IsMinimal M Y := by {
-    sorry
+    let S := { Y : Set X | IsClosed Y ∧ Y.Nonempty ∧ ∀ c : M, ∀ x ∈ Y, c +ᵥ x ∈ Y }
+    have minimal_set: ∃ Y ∈ S, ∀ Z ∈ S, Y ⊆ Z → Y = Z := by {
+      apply zorn_subset at S
+      unfold Maximal at S
+      have hc := S (
+        by
+        intro c
+        intro h
+        intro h_is_chain
+        sorry
+      )
+      obtain ⟨Y, hY, hY_maximal⟩ := hc
+      use Y, hY
+      intro Z hZ
+      intro h_Y_subset_Z
+      exact Set.Subset.antisymm h_Y_subset_Z (hY_maximal hZ h_Y_subset_Z)
+      }
+    obtain ⟨Y, h_Y⟩ :=  minimal_set
+    use Y
    }
