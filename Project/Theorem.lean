@@ -32,7 +32,7 @@ theorem exists_minimal_invariant_subset :
    IsClosed Y ∧
    AddAction.IsMinimal M Y := by {
     let S := { Y : Set X | IsClosed Y ∧ Y.Nonempty ∧ ∀ c : M, ∀ x ∈ Y, c +ᵥ x ∈ Y }
-    have minimal_set: ∃ Y ∈ S, ∀ Z ∈ S, Y ⊆ Z → Y = Z := by {
+    have minimal_set: ∃ Y ∈ S, ∀ Z ∈ S, Z ⊆ Y → Y = Z := by {
       apply zorn_subset at S
       unfold Maximal at S
       have hc := S (
@@ -78,7 +78,20 @@ theorem exists_minimal_invariant_subset :
     intro hE_inv
     by_cases hE : E.Nonempty
     · right
-      sorry
+      have h_Y_AddAction := SubAddAction.SubAction
+      have h_E_in_S : ↑E ∈ S := by {
+        constructor
+        · sorry
+        · sorry
+      }
+      let E' := Subtype.val '' E
+      have h_E'_in_S : E' ∈ S := by aesop
+      have h_E'_sub_Y : E' ⊆ Y := by aesop
+      have h2 := h_Y.2
+      have h2 := h2 E'
+      have h2 := h2 h_E'_in_S
+      have h2 := h2 h_E'_sub_Y
+      exact eq_univ_of_image_val_eq (id (Eq.symm h2))
     · left
       exact Set.not_nonempty_iff_eq_empty.mp hE
    }

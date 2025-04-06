@@ -41,6 +41,25 @@ theorem exists_minimal_invariant_subset
    Y.Nonempty ∧
    AddAction.IsMinimal M Y := by {
   let S := { Y : Set X | IsClosed Y ∧ Y.Nonempty ∧ ∀ c : M, ∀ x ∈ Y, c +ᵥ x ∈ Y }
+  have minimal_set: ∃ Y ∈ S, ∀ Z ∈ S, Y ⊆ Z → Y = Z :=by
+    apply zorn_subset at S
+    unfold Maximal at S
+    have hc := S (
+      by
+      intro c
+      intro h
+      intro h_is_chain
+      sorry
+    )
+    sorry
+  obtain ⟨Y, h_Y⟩ :=  minimal_set
+  use Y
+
+
+
+
+
+
   suffices ∃ Y ∈ S, ∀ Z ∈ S, Y ⊆ Z → Y = Z by {
     simp_all only [exists_and_left]
     obtain ⟨Y, hY, hY_maximal⟩ := this
@@ -59,7 +78,6 @@ theorem exists_minimal_invariant_subset
     rw [iff_mpr_iff_true_intro right]
     -- convert RHS
     -- rw [@AddAction.ext_iff]
-    rw [AddAction_on_inv_subset]
     convert RHS
     aesop
     unfold VAdd.vadd
@@ -69,26 +87,9 @@ theorem exists_minimal_invariant_subset
     let h := right x val property
     use h
     #check AddAction_M_Y.1.1
+    rfl
 
   }
-  apply zorn_subset at S
-  unfold Maximal at S
-  have hc := S (
-    by
-    intro c
-    intro h
-    intro h_is_chain
-    sorry
-  )
-
-  obtain ⟨Y, hY, hY_maximal⟩ := hc
-  use Y, hY
-  intro Z hZ
-  intro h_Y_subset_Z
-  exact Set.Subset.antisymm h_Y_subset_Z (hY_maximal hZ h_Y_subset_Z)
-  }
-  -- let existence_minimal_element := S sorry
-
 
 
 /-!
