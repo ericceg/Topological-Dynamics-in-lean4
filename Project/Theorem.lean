@@ -55,20 +55,15 @@ theorem exists_minimal_invariant_subset :
     have h_Y_nonempty := h_Y_in_S.2.1
     have h_Y_inv := h_Y_in_S.2.2
     have SubAddAction : MySubAddAction M X Y
+    have AddAction_on_Y : AddAction M Y := {
+      vadd := λ c y => ⟨c +ᵥ y.1, h_Y_inv c y.1 y.2⟩
+      zero_vadd := λ x => Subtype.ext (zero_vadd M (x : X)),
+      add_vadd := λ c₁ c₂ x => Subtype.ext (add_vadd c₁ c₂ (x : X))
+    }
     constructor
-    have AddAction_on_Y : AddAction M Y := {
-      vadd := λ c y => ⟨c +ᵥ y.1, h_Y_inv c y.1 y.2⟩
-      zero_vadd := λ x => Subtype.ext (zero_vadd M (x : X)),
-      add_vadd := λ c₁ c₂ x => Subtype.ext (add_vadd c₁ c₂ (x : X))
-    }
-    intro c x
-    rfl
-    have AddAction_on_Y : AddAction M Y := {
-      vadd := λ c y => ⟨c +ᵥ y.1, h_Y_inv c y.1 y.2⟩
-      zero_vadd := λ x => Subtype.ext (zero_vadd M (x : X)),
-      add_vadd := λ c₁ c₂ x => Subtype.ext (add_vadd c₁ c₂ (x : X))
-    }
-    exact AddAction_on_Y
+    · intro c x
+      rfl
+    · exact AddAction_on_Y
     use SubAddAction
     use h_Y_nonempty
     use h_Y_isClosed
@@ -81,5 +76,9 @@ theorem exists_minimal_invariant_subset :
     intro E
     intro hE_isClosed
     intro hE_inv
-
+    by_cases hE : E.Nonempty
+    · right
+      sorry
+    · left
+      exact Set.not_nonempty_iff_eq_empty.mp hE
    }
