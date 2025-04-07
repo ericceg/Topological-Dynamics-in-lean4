@@ -72,7 +72,15 @@ theorem exists_minimal_invariant_subset :
               have h_C_DirectedOn := IsChain.directedOn h_chain_reversed
               have concl := @IsCompact.nonempty_sInter_of_directed_nonempty_isCompact_isClosed X h_X_top C h_C_nonempty' h_C_DirectedOn h_all_sets_in_C_nonempty h_all_sets_in_C_compact h_all_sets_in_C_closed
               exact concl
-            · sorry
+            · intro c x h_x_in_all_C
+              have h_x_in_all_C : ∀ E ∈ C, c +ᵥ x ∈ E := by {
+                intro E h_E_in_C
+                have h_x_in_E : x ∈ E := by aesop
+                have h_E_in_S := h h_E_in_C
+                have ⟨_, _, h_E_inv⟩ := h_E_in_S
+                exact h_E_inv c x h_x_in_E
+              }
+              exact h_x_in_all_C
         · intro s h_s_in_C
           unfold sInter
           exact fun ⦃a⦄ a ↦ a s h_s_in_C -- obtained this using `hint`
