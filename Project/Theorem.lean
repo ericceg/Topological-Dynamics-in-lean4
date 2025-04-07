@@ -145,8 +145,12 @@ theorem exists_minimal_invariant_subset :
             sorry
       }
       let E' := Subtype.val '' E
-      have h_E'_in_S : E' ∈ S := by aesop
-      have h_E'_sub_Y : E' ⊆ Y := by aesop
+      have h_E'_in_S : E' ∈ S := by {
+        gcongr
+      }
+      have h_E'_sub_Y : E' ⊆ Y := by {
+        exact Subtype.coe_image_subset Y E
+      }
       have h2 := h_Y.2
       have h2 := h2 E'
       have h2 := h2 h_E'_in_S
