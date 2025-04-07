@@ -45,7 +45,8 @@ theorem exists_minimal_invariant_subset :
         · constructor
           · have h_all_sets_in_C_closed : ∀ c ∈ C, IsClosed c := by {
               intro c h_c_in_C
-              sorry
+              have h_c_in_S := h h_c_in_C
+              aesop
             }
             exact isClosed_sInter h_all_sets_in_C_closed
           · constructor
