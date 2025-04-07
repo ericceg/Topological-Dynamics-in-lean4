@@ -114,10 +114,15 @@ theorem exists_minimal_invariant_subset :
     let h_subaction_VAdd := SubAddAction.SubAction.toVAdd
     have h_subaction_continuous_const_vadd : ∀ m : M, Continuous fun x : Y => m +ᵥ x := by {
       intro m
+      let f := (fun x ↦ m +ᵥ x : X → X)
       have h_action_continuous_on_X := h_action_continuous.continuous_const_vadd m
-      constructor
-      intro S
-      intro h_S
+      have h_action_continuous_on_Y : ContinuousOn f Y := by {
+        exact Continuous.continuousOn h_action_continuous_on_X
+      }
+      have h_action_continuous_on_X : Continuous f := by exact h_action_continuous_on_X
+      have ht : MapsTo f Y Y := by sorry
+      have h_action_continuous_on_Y_restricted := @ContinuousOn.restrict_mapsTo X X h_X_top h_X_top f Y Y h_action_continuous_on_Y ht
+      simp_all [f]
       sorry
     }
     have h_subaction_continuous : @ContinuousConstVAdd M Y instTopologicalSpaceSubtype SubAddAction.SubAction.toVAdd := by {
