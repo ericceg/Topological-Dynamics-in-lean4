@@ -63,17 +63,14 @@ theorem exists_minimal_invariant_subset :
         · constructor
           · exact isClosed_sInter h_all_sets_in_C_closed
           · constructor
-            · have h_C_chain_to_DirectedOn : DirectedOn (fun x1 x2 ↦ x1 ⊇ x2) C := by {
-                unfold DirectedOn
-                intro x h_x y h_y
-                use x
+            · have h_chain_reversed := IsChain.symm h_is_chain
+              have : IsRefl (Set X) (flip fun x1 x2 ↦ x1 ⊆ x2) := by {
                 constructor
-                · exact h_x
-                · constructor
-                  · aesop
-                  · sorry
+                intro x
+                exact Subset.refl x
               }
-              have concl := @IsCompact.nonempty_sInter_of_directed_nonempty_isCompact_isClosed X h_X_top C h_C_nonempty' h_C_chain_to_DirectedOn h_all_sets_in_C_nonempty h_all_sets_in_C_compact h_all_sets_in_C_closed
+              have h_C_DirectedOn := IsChain.directedOn h_chain_reversed
+              have concl := @IsCompact.nonempty_sInter_of_directed_nonempty_isCompact_isClosed X h_X_top C h_C_nonempty' h_C_DirectedOn h_all_sets_in_C_nonempty h_all_sets_in_C_compact h_all_sets_in_C_closed
               exact concl
             · sorry
         · intro s h_s_in_C
