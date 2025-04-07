@@ -37,10 +37,23 @@ theorem exists_minimal_invariant_subset :
       unfold Minimal at S
       have hc := S (
         by
-        intro c
+        intro C
         intro h
         intro h_is_chain
-        sorry
+        use (⋂₀ C)
+        constructor
+        · constructor
+          · have h_all_sets_in_C_closed : ∀ c ∈ C, IsClosed c := by {
+              intro c h_c_in_C
+              sorry
+            }
+            exact isClosed_sInter h_all_sets_in_C_closed
+          · constructor
+            · sorry
+            · sorry
+        · intro s h_s_in_C
+          unfold sInter
+          exact fun ⦃a⦄ a ↦ a s h_s_in_C -- obtained this using `hint`
       )
       obtain ⟨Y, hY, hY_minimal⟩ := hc
       use Y, hY
