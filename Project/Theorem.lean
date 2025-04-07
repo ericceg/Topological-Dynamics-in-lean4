@@ -39,18 +39,42 @@ theorem exists_minimal_invariant_subset :
         by
         intro C
         intro h
-        intro h_is_chain
+        intro h_is_chain -- h_C_nonempty
+        have h_C_nonempty : C.Nonempty := by sorry -- needed to use `IsCompact.nonempty_sInter_of_directed_nonempty_isCompact_isClosed`
+        have h_C_nonempty' : Nonempty ↑C := by sorry
         use (⋂₀ C)
+        have h_all_sets_in_C_closed : ∀ c ∈ C, IsClosed c := by {
+          intro c h_c_in_C
+          have h_c_in_S := h h_c_in_C
+          aesop
+        }
+        have h_all_sets_in_C_nonempty : ∀ c ∈ C, c.Nonempty := by {
+          intro c h_c_in_C
+          have h_c_in_S := h h_c_in_C
+          have ⟨_, h_c_nonempty, _⟩ := h_c_in_S
+          exact h_c_nonempty
+        }
+        have h_all_sets_in_C_compact : ∀ c ∈ C, IsCompact c := by {
+          intro c h_c_in_C
+          have h_c_in_S := h h_c_in_C
+          exact IsClosed.isCompact (h_all_sets_in_C_closed c h_c_in_C) -- obtained this using `hint`
+        }
         constructor
         · constructor
-          · have h_all_sets_in_C_closed : ∀ c ∈ C, IsClosed c := by {
-              intro c h_c_in_C
-              have h_c_in_S := h h_c_in_C
-              aesop
-            }
-            exact isClosed_sInter h_all_sets_in_C_closed
+          · exact isClosed_sInter h_all_sets_in_C_closed
           · constructor
-            · sorry
+            · have h_C_chain_to_DirectedOn : DirectedOn (fun x1 x2 ↦ x1 ⊇ x2) C := by {
+                unfold DirectedOn
+                intro x h_x y h_y
+                use x
+                constructor
+                · exact h_x
+                · constructor
+                  · aesop
+                  · sorry
+              }
+              have concl := @IsCompact.nonempty_sInter_of_directed_nonempty_isCompact_isClosed X h_X_top C h_C_nonempty' h_C_chain_to_DirectedOn h_all_sets_in_C_nonempty h_all_sets_in_C_compact h_all_sets_in_C_closed
+              exact concl
             · sorry
         · intro s h_s_in_C
           unfold sInter
