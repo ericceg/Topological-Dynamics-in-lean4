@@ -123,7 +123,11 @@ theorem exists_minimal_invariant_subset :
       have ht : MapsTo f Y Y := by sorry
       have h_action_continuous_on_Y_restricted := @ContinuousOn.restrict_mapsTo X X h_X_top h_X_top f Y Y h_action_continuous_on_Y ht
       simp_all [f]
-      sorry
+      have h_e : (MapsTo.restrict (fun x ↦ m +ᵥ x) Y Y ht) = (fun x : Y => m +ᵥ x) := by {
+        sorry
+      }
+      have h_concl : Continuous fun x : Y => m +ᵥ x := h_e ▸ h_action_continuous_on_Y_restricted
+      exact h_concl
     }
     have h_subaction_continuous : @ContinuousConstVAdd M Y instTopologicalSpaceSubtype SubAddAction.SubAction.toVAdd := by {
       constructor
