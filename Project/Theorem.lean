@@ -1,21 +1,13 @@
 import Mathlib
 
 
-/-! A SubAddAction is a set which is closed under scalar multiplication.
-structure SubAddAction (R : Type u) (M : Type v) [VAdd R M] : Type v where
-  /-- The underlying set of a `SubAddAction`. -/
-  carrier : Set M
-  /-- The carrier set is closed under scalar multiplication. -/
-  vadd_mem' : ∀ (c : R) {x : M}, x ∈ carrier → c +ᵥ x ∈ carrier
--/
-
 class MySubAddAction (M : Type*) (X : Type*) (Y : Set X) [AddMonoid M] [add_action_orig : AddAction M X] where
   SubAction : AddAction M Y
   SubAction_eq_Action : ∀ (c : M) (x : Y), ↑(c +ᵥ x) = add_action_orig.vadd c ↑x
 
-open Pointwise
 
-open AddAction Set
+open Pointwise AddAction Set
+
 
 variable {M X : Type*} [h_X_top : TopologicalSpace X] [h_X_compact : CompactSpace X] [h_X_nonempty : Nonempty X] [h_M_monoid : AddMonoid M] [h_M_X_action : AddAction M X] [h_action_continuous : ContinuousConstVAdd M X]
 
