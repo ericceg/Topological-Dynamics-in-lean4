@@ -125,7 +125,13 @@ theorem exists_minimal_invariant_subset :
       have h_action_continuous_on_Y_restricted := @ContinuousOn.restrict_mapsTo X X h_X_top h_X_top f Y Y h_action_continuous_on_Y ht
       simp_all [f]
       have h_e : (MapsTo.restrict (fun x ↦ m +ᵥ x) Y Y ht) = (fun x : Y => m +ᵥ x) := by {
-        sorry
+        ext x
+        unfold MapsTo.restrict
+        unfold Subtype.map
+        simp
+        have h_action_eq := SubAddAction.SubAction_eq_Action m x
+        simp_all [VAdd.vadd]
+        exact rfl
       }
       have h_concl : Continuous fun x : Y => m +ᵥ x := h_e ▸ h_action_continuous_on_Y_restricted
       exact h_concl
