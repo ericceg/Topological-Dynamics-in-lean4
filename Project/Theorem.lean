@@ -18,7 +18,7 @@ Todo: Think about additional assumptions about the action (e.g. continuity). May
  -/
 theorem exists_minimal_invariant_subset :
    ∃ (Y : Set X) (h_SubAction : MySubAddAction M X Y),
-   have SubAction : AddAction M Y := h_SubAction.SubAction
+   have : AddAction M Y := h_SubAction.SubAction
    Y.Nonempty ∧
    IsClosed Y ∧
    AddAction.IsMinimal M Y := by {
@@ -50,7 +50,8 @@ theorem exists_minimal_invariant_subset :
                 obtain ⟨x, hx⟩ := h_exist_element_in_X
                 use x
                 exact hx
-              · sorry
+              · intro c x hx
+                exact hx
           }
           obtain ⟨x, hx⟩ := this
           use x
