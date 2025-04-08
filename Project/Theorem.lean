@@ -24,58 +24,74 @@ theorem exists_minimal_invariant_subset :
    AddAction.IsMinimal M Y := by {
     let S := { Y : Set X | IsClosed Y ∧ Y.Nonempty ∧ ∀ c : M, ∀ x ∈ Y, c +ᵥ x ∈ Y }
     have minimal_set: ∃ Y ∈ S, ∀ Z ∈ S, Z ⊆ Y → Y = Z := by {
-      apply zorn_superset at S
-      unfold Minimal at S
-      have hc := S (
+      have zorn_concl := zorn_superset S
+      unfold Minimal at zorn_concl
+      have hc := zorn_concl (
         by
         intro C
         intro h
         intro h_is_chain -- h_C_nonempty
-        have h_C_nonempty : C.Nonempty := by sorry -- needed to use `IsCompact.nonempty_sInter_of_directed_nonempty_isCompact_isClosed`
-        have h_C_nonempty' : Nonempty ↑C := by sorry
-        use (⋂₀ C)
-        have h_all_sets_in_C_closed : ∀ c ∈ C, IsClosed c := by {
-          intro c h_c_in_C
-          have h_c_in_S := h h_c_in_C
-          aesop
-        }
-        have h_all_sets_in_C_nonempty : ∀ c ∈ C, c.Nonempty := by {
-          intro c h_c_in_C
-          have h_c_in_S := h h_c_in_C
-          have ⟨_, h_c_nonempty, _⟩ := h_c_in_S
-          exact h_c_nonempty
-        }
-        have h_all_sets_in_C_compact : ∀ c ∈ C, IsCompact c := by {
-          intro c h_c_in_C
-          have h_c_in_S := h h_c_in_C
-          exact IsClosed.isCompact (h_all_sets_in_C_closed c h_c_in_C) -- obtained this using `hint`
-        }
-        constructor
-        · constructor
-          · exact isClosed_sInter h_all_sets_in_C_closed
+        by_cases h_C_nonempty : Nonempty ↑C -- needed to use `IsCompact.nonempty_sInter_of_directed_nonempty_isCompact_isClosed`
+        case neg := by
+          have h_C_empty : C = ∅ := by {
+            exact not_nonempty_iff_eq_empty'.mp h_C_nonempty
+          }
+          have h_S_nonempty : S.Nonempty := by {
+            sorry
+          }
+          have : ∃ (x : Set X), x ∈ S := by {
+            sorry
+          }
+          obtain ⟨x, hx⟩ := this
+          use x
+          constructor
+          · exact hx
+          · simp_all only [le_eq_subset, empty_subset, IsChain.empty, nonempty_subtype, mem_empty_iff_false, exists_const,
+  not_false_eq_true, IsEmpty.forall_iff, implies_true] -- obtained this using `hint`
+        case pos := by
+          use (⋂₀ C)
+          have h_all_sets_in_C_closed : ∀ c ∈ C, IsClosed c := by {
+            intro c h_c_in_C
+            have h_c_in_S := h h_c_in_C
+            aesop
+          }
+          have h_all_sets_in_C_nonempty : ∀ c ∈ C, c.Nonempty := by {
+            intro c h_c_in_C
+            have h_c_in_S := h h_c_in_C
+            have ⟨_, h_c_nonempty, _⟩ := h_c_in_S
+            exact h_c_nonempty
+          }
+          have h_all_sets_in_C_compact : ∀ c ∈ C, IsCompact c := by {
+            intro c h_c_in_C
+            have h_c_in_S := h h_c_in_C
+            exact IsClosed.isCompact (h_all_sets_in_C_closed c h_c_in_C) -- obtained this using `hint`
+          }
+          constructor
           · constructor
-            · have h_chain_reversed := IsChain.symm h_is_chain
-              have : IsRefl (Set X) (flip fun x1 x2 ↦ x1 ⊆ x2) := by {
-                constructor
-                intro x
-                exact Subset.refl x
-              }
-              have h_C_DirectedOn := IsChain.directedOn h_chain_reversed
-              have concl := @IsCompact.nonempty_sInter_of_directed_nonempty_isCompact_isClosed X h_X_top C h_C_nonempty' h_C_DirectedOn h_all_sets_in_C_nonempty h_all_sets_in_C_compact h_all_sets_in_C_closed
-              exact concl
-            · intro c x h_x_in_all_C
-              have h_x_in_all_C : ∀ E ∈ C, c +ᵥ x ∈ E := by {
-                intro E h_E_in_C
-                have h_x_in_E : x ∈ E := by aesop
-                have h_E_in_S := h h_E_in_C
-                have ⟨_, _, h_E_inv⟩ := h_E_in_S
-                exact h_E_inv c x h_x_in_E
-              }
-              exact h_x_in_all_C
-        · intro s h_s_in_C
-          unfold sInter
-          exact fun ⦃a⦄ a ↦ a s h_s_in_C -- obtained this using `hint`
-      )
+            · exact isClosed_sInter h_all_sets_in_C_closed
+            · constructor
+              · have h_chain_reversed := IsChain.symm h_is_chain
+                have : IsRefl (Set X) (flip fun x1 x2 ↦ x1 ⊆ x2) := by {
+                  constructor
+                  intro x
+                  exact Subset.refl x
+                }
+                have h_C_DirectedOn := IsChain.directedOn h_chain_reversed
+                have concl := @IsCompact.nonempty_sInter_of_directed_nonempty_isCompact_isClosed X h_X_top C h_C_nonempty h_C_DirectedOn h_all_sets_in_C_nonempty h_all_sets_in_C_compact h_all_sets_in_C_closed
+                exact concl
+              · intro c x h_x_in_all_C
+                have h_x_in_all_C : ∀ E ∈ C, c +ᵥ x ∈ E := by {
+                  intro E h_E_in_C
+                  have h_x_in_E : x ∈ E := by aesop
+                  have h_E_in_S := h h_E_in_C
+                  have ⟨_, _, h_E_inv⟩ := h_E_in_S
+                  exact h_E_inv c x h_x_in_E
+                }
+                exact h_x_in_all_C
+          · intro s h_s_in_C
+            unfold sInter
+            exact fun ⦃a⦄ a ↦ a s h_s_in_C -- obtained this using `hint`
+        )
       obtain ⟨Y, hY, hY_minimal⟩ := hc
       use Y, hY
       intro Z hZ
