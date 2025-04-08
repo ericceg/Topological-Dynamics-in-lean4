@@ -36,11 +36,15 @@ theorem exists_minimal_invariant_subset :
           have h_C_empty : C = ∅ := by {
             exact not_nonempty_iff_eq_empty'.mp h_C_nonempty
           }
-          have h_S_nonempty : S.Nonempty := by {
-            sorry
-          }
           have : ∃ (x : Set X), x ∈ S := by {
-            sorry
+            let X' := { x : X | True }
+            use X'
+            unfold S
+            constructor
+            · sorry
+            · constructor
+              · sorry
+              · sorry
           }
           obtain ⟨x, hx⟩ := this
           use x
