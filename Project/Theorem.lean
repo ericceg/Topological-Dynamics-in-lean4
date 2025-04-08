@@ -153,8 +153,13 @@ theorem exists_minimal_invariant_subset :
           · exact Nonempty.image Subtype.val hE
           · intro c x
             intro h_x_in_E
+            obtain ⟨y, hyE, rfl⟩ := h_x_in_E
             have h_E_inv_under_c := hE_inv c
-            sorry
+            have h_cy_in_E : c +ᵥ y ∈ E := h_E_inv_under_c (Set.mem_image_of_mem _ hyE)
+            have h_test := SubAddAction.SubAction_eq_Action c y
+            change h_M_X_action.vadd c y ∈ Subtype.val '' E
+            rw [←h_test]
+            exact mem_image_of_mem Subtype.val h_cy_in_E -- obtained this using `hint`
       }
       let E' := Subtype.val '' E
       have h_E'_in_S : E' ∈ S := by {
