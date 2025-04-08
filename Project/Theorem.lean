@@ -41,9 +41,15 @@ theorem exists_minimal_invariant_subset :
             use X'
             unfold S
             constructor
-            · sorry
+            · exact isClosed_const
             · constructor
-              · sorry
+              · apply Set.nonempty_def.2
+                have h_exist_element_in_X : ∃ x : X, True := by {
+                  exact (exists_const X).mpr trivial
+                }
+                obtain ⟨x, hx⟩ := h_exist_element_in_X
+                use x
+                exact hx
               · sorry
           }
           obtain ⟨x, hx⟩ := this
