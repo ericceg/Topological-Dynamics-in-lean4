@@ -1,47 +1,58 @@
 import Mathlib
 
 
-/-- Lemma: If we have AddAction M X and Y is a subset of X that is invariant under the action of M then the restriction of the action of M on Y is an AddAction M Y -/
-instance AddAction_on_inv_subset
-  {M X : Type*} [AddMonoid M] [AddAction M X] {Y : Set X}
-  (h_Y_inv: ∀ c : M, ∀ x : X, x ∈ Y → c +ᵥ x ∈ Y) :
-  AddAction M Y := {
-    vadd := λ c y => ⟨c +ᵥ y.1, h_Y_inv c y.1 y.2⟩
-    zero_vadd := λ x => Subtype.ext (zero_vadd M (x : X)),
-    add_vadd := λ c₁ c₂ x => Subtype.ext (add_vadd c₁ c₂ (x : X))
-    }
+class MySubAddAction (M : Type*) (X : Type*) (Y : Set X) [AddMonoid M] [add_action_orig : AddAction M X] where
+  SubAction : AddAction M Y
+  SubAction_eq_Action : ∀ (c : M) (x : Y), ↑(c +ᵥ x) = add_action_orig.vadd c ↑x
 
-open AddAction Set
-open Pointwise -- necessary for `have : ∀ (E : Set Y), IsClosed E → (∀ (c : M), c +ᵥ E ⊆ E) → E = ∅ ∨ E = univ := sorry` to make sense
+open Pointwise AddAction Set
+
 
 /-- Theorem 1.14: In a nonempty compact metric space X with an additive Action of M on X, there exists a closed,
 nonempty subset Y such that Y is M-invariant and the restricted action of M on Y is minimal.
 Todo: Think about additional assumptions about the action (e.g. continuity). Maybe even consider a continuous groupaction (induced by a homeomorphism on X).
  -/
-theorem exists_minimal_invariant_subset
-  {M X : Type*} [TopologicalSpace X] [CompactSpace X] [Nonempty X] [AddMonoid M] [AddAction M X] [ContinuousConstVAdd M X] :
-   ∃ (Y : Set X) (hY_inv : ∀ c : M, ∀ x ∈ Y, c +ᵥ x ∈ Y),
-   have h_action_on_inv_subset : AddAction M Y := AddAction_on_inv_subset hY_inv
-   IsClosed Y ∧
+axiom exists_minimal_invariant_subset
+  {M X : Type*} [h_X_top : TopologicalSpace X] [h_X_compact : CompactSpace X] [h_X_nonempty : Nonempty X]
+  [h_M_monoid : AddMonoid M] [h_M_X_action : AddAction M X] [h_action_continuous : ContinuousConstVAdd M X]:
+   ∃ (Y : Set X) (h_SubAction : MySubAddAction M X Y),
+   have : AddAction M Y := h_SubAction.SubAction
    Y.Nonempty ∧
-   AddAction.IsMinimal M Y := by sorry
+   IsClosed Y ∧
+   AddAction.IsMinimal M Y
 
-/-- For a point x₀ in a compact topological space X with an additive action M on X,
-the set Y of limits of any function ϕ: ℕ → X where ϕ(0) = x₀ and ϕ(n + 1) = mₙ ϕ(n) for some element mₙ ∈ M. -/
-def LimitSet {M X : Type*} [TopologicalSpace X] [CompactSpace X] [AddMonoid M] [AddAction M X]
-  [ContinuousConstVAdd M X] (x : X) : Set X :=  {y | ∃ (m_n : ℕ → M), ∃ (ϕ : ℕ → X), (ϕ 0 = x) ∧ (∀ n, ϕ (n + 1) = m_n n +ᵥ ϕ n) ∧
-    ∀(Y : Set X), ∃ N, ∀ n ≥ N, ϕ n ∈ Y ∧ IsOpen Y ∧ y ∈ Y }
+open Set Filter
+open Nat
 
-/-- A recurrent point is a point that is contained in its LimitSet. -/
-def isRecurrentPoint {M X : Type*} [TopologicalSpace X] [CompactSpace X] [Nonempty X]
-  [AddMonoid M] [AddAction M X] [ContinuousConstVAdd M X] (x : X) : Prop :=  x ∈ LimitSet x
+variable {X : Type*} [h_X_top: TopologicalSpace X] [h_X_compact : CompactSpace X] [h_X_nonempty : Nonempty X]
 
-/--Corollary 1.16: If X is a non-empty compact topological space with an additive action of M on X,
-then there exists some recurrent x_0 ∈ X.-/
-theorem exists_recurrent_point
-  {M X : Type*} [TopologicalSpace X] [CompactSpace X] [Nonempty X] [AddMonoid M] [AddAction M X] [ContinuousConstVAdd M X] :
-  ∃ (x : X), isRecurrentPoint x := by sorry
+-- Define the homeomorphism T : X → X
+variable (T : X → X)
+variable (T : Homeomorph X X)
 
-/-!
-Run #min_imports at the end of the file to check necessary imports.
--/
+-- Let ℕ act on X via iterates of T
+def N_action (n : ℕ) (x : X) : X := (T^[n]) x
+
+-- Define the orbit closure of x under T
+def orbitClosure (x : X) : Set X := closure { y | ∃ n : ℕ, y = N_action T n x }
+
+-- Recurrent point: x ∈ closure of its forward orbit
+noncomputable def isRecurrent (x : X) : Prop := x ∈ closure { y | ∃n : ℕ, y = (T^[n]) x }
+
+instance N_action_AddAction : AddAction ℕ X where
+  vadd := N_action T
+  zero_vadd := by
+    intro x
+    rfl
+  add_vadd := by
+    intros m n x
+    exact congrFun (Function.iterate_add T m n) x
+
+theorem exists_recurrent_point (hT : Continuous T) (hT_inv : Continuous T.symm) :
+  ∃ x : X, isRecurrent T x := by {
+
+/-- Works until here --/
+
+  obtain ⟨Y, h_sub, Y_nonempty, Y_closed, Y_minimal⟩ :=
+    exists_minimal_invariant_subset (M := ℕ) (X := X)
+  }
