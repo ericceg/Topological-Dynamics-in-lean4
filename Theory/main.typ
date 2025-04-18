@@ -33,7 +33,6 @@
 
 = Topological Dynamics 
 
-== Central Result 
 
 Let $X$ be a set and $T:X ->  X$ a map. This setting is called a _dynamical system_.
 
@@ -55,12 +54,15 @@ if $overline(cal(O)(x_0)) = X$.
 $T$ is called _minimal_ if every orbit is dense. 
 ]
 
+The following proposition provides an equivalent characterization of minimality.
 
 #proposition()[
 Let $T:X ->  X$ be continuous on a compact metric space.
 Then $T$ is minimal if and only if for every closed $T$-invariant subset $E subset.eq X$ 
 we have $E = emptyset$ or $E = X$.
-]
+]<prop-minimal-equivalence-1>
+
+This proposition is already implemented in `mathlib4` and our goal will be to use this to prove the following theorem.
 
 
 #theorem()[
@@ -70,7 +72,30 @@ and $T|_Y: Y ->  Y$ is minimal.
 ]
 
 
-== Reformulation using Actions 
+= Reformulation using Actions 
+
+As `mathlib4` tries to be as general as possible, we will reformulate the previous definitions and theorems using actions. On the one hand, this will make our final theorem more powerful and on the other hand, it will allow us to use the implementation of @prop-minimal-equivalence-1 more easily. 
+
+#definition()[
+A set $M$ equipped with a binary operation $+: M times M ->  M$ is called a _(additive) monoid_
+the following hold:
+
+1. For all $a, b, c ∈ M$ we have $(a+b)+c = a+(b+c)$.
+
+2. There exists an element $0 ∈ M$ such that $a+0=0+a=a$ for all $a ∈ M$. 
+]
+
+#definition()[
+  An _additive action_ of a monoid $M$ on a set $X$ is a map $ 
+  M times X ->  X, space (m, x) |->  m x 
+  $ 
+  such that the following hold:
+
+  1. For all $x ∈ X$ we have $0 + x = x$.
+
+  2. For all $m, n ∈ M$ and $x ∈ X$ we have $(m + n) x = m (n x)$. 
+]
+
 
 Let $M$ be an additive monoid acting on a compact metric space $X$. 
 
@@ -84,9 +109,19 @@ $
   $(X, M)$ is called _minimal_ if every orbit is dense.
 ]
 
+#definition()[
+We say that the action of $M$ on $X$ is _continuous_ if for every $m ∈ M$ the map 
+$X -> X, space x |->  m x$ is continuous. 
+]
+
+= Existence of Minimal Subsystems
+
 #proposition()[
-$(X, M)$ is minimal if and only if for every closed $M$-invariant subset $E subset.eq X$ 
-we have $E = emptyset$ or $E = X$.
+Let $M$ be an additive monoid acting continuously on a topological space $X$. The following are equivalent:
+
+- $(X, M)$ is minimal. 
+
+- For every closed $M$-invariant subset $E subset.eq X$ we have $E = emptyset$ or $E = X$.
 ]<prop-minimal-equivalence>
 
 #link("https://leanprover-community.github.io/mathlib_docs/dynamics/minimal.html#is_minimal_iff_closed_vadd_invariant")[`Lean` implementation:]
@@ -99,6 +134,34 @@ theorem is_minimal_iff_closed_vadd_invariant (M : Type u_1) {α : Type u_3}
   ∀ (s : set α), is_closed s → (∀ (c : M), c +ᵥ s ⊆ s) → s = ∅ ∨ s = set.univ
 ```
 
+We will use this to prove the following theorem. 
+
+#theorem()[
+Let $M$ be an additive monoid acting continuously on a non-empty compact topological space $X$.
+If $(M, X)$ is minimal then there exists a closed non-empty $Y subset.eq X$ such that $M Y subset.eq Y$
+and the restricted action $ 
+M times Y ->  Y, space (m, y) |->  m y  
+$ 
+is minimal.
+]<thm-existence-minimal-subsystem>
+
+`Lean` implementation:
+```lean
+class MySubAddAction (M : Type*) (X : Type*) (Y : Set X) [AddMonoid M] [add_action_orig : AddAction M X] where
+  SubAction : AddAction M Y
+  SubAction_eq_Action : ∀ (c : M) (x : Y), ↑(c +ᵥ x) = add_action_orig.vadd c ↑x
+
+variable {M X : Type*} [h_X_top : TopologicalSpace X] [h_X_compact : CompactSpace X] [h_X_nonempty : Nonempty X] [h_M_monoid : AddMonoid M] [h_M_X_action : AddAction M X] [h_action_continuous : ContinuousConstVAdd M X]
+
+theorem exists_minimal_invariant_subset :
+   ∃ (Y : Set X) (h_SubAction : MySubAddAction M X Y),
+   have : AddAction M Y := h_SubAction.SubAction
+   Y.Nonempty ∧
+   IsClosed Y ∧
+   AddAction.IsMinimal M Y := by ...
+```
+
+For the proof of this theorem we need some preparations. 
 
 #theorem("Zorn's lemma")[
 Let $S$ be a set of subsets of a set $α$. 
@@ -114,6 +177,7 @@ Then there exists an element $m ∈ S$ such that $
 $ 
 ]<thm-zorn-lemma>
 
+#block(breakable: false)[
 #link("https://leanprover-community.github.io/mathlib4_docs/Mathlib/Order/Zorn.html#zorn_superset")[`Lean` implementation:]
 ```lean
 theorem zorn_superset 
@@ -122,18 +186,11 @@ theorem zorn_superset
           → ∃ lb ∈ S, ∀ s ∈ c, lb ⊆ s) :
   ∃ (m : Set α), Minimal (fun (x : Set α) => x ∈ S) m
 ```
-
-
-#theorem()[
-Assume that $X$ is non-empty and $(X, M)$ is minimal. 
-Then there exists a closed non-empty $Y subset.eq X$ such that $M Y subset.eq Y$
-and the restricted action $ 
-M times Y ->  Y, space (m, y) |->  m y  
-$ 
-is minimal.
 ]
 
-#proof()[
+
+
+#proof([of @thm-existence-minimal-subsystem])[
 Let $M$ be an additive monoid acting on a non-empty compact metric space $X$ and 
 assume that $(X, M)$ is minimal. Define the family $ 
 S := { Y subset.eq X bar Y != emptyset, space  Y "closed", space  M Y subset.eq Y}. 

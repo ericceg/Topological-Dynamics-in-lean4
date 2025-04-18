@@ -170,7 +170,7 @@
   // automatically begin a new page at each section with level 1 if it is not the very first section
   show heading: x => {
     if x.numbering != none and x.level == 1 and counter(heading).get() != (1,) {
-    pagebreak() + x}
+     x}
     else{
       x
     }}
