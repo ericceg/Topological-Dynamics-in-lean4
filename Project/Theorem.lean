@@ -1,6 +1,7 @@
 import Mathlib
 
 
+
 class MySubAddAction (M : Type*) (X : Type*) (Y : Set X) [AddMonoid M] [add_action_orig : AddAction M X] where
   SubAction : AddAction M Y
   SubAction_eq_Action : ∀ (c : M) (x : Y), ↑(c +ᵥ x) = add_action_orig.vadd c ↑x
@@ -57,8 +58,7 @@ theorem exists_minimal_invariant_subset :
           use x
           constructor
           · exact hx
-          · simp_all only [le_eq_subset, empty_subset, IsChain.empty, nonempty_subtype, mem_empty_iff_false, exists_const,
-  not_false_eq_true, IsEmpty.forall_iff, implies_true] -- obtained this using `hint`
+          · simp_all only [le_eq_subset, empty_subset, IsChain.empty, nonempty_subtype, mem_empty_iff_false, exists_const, not_false_eq_true, IsEmpty.forall_iff, implies_true] -- obtained this using `hint`
         case pos := by
           use (⋂₀ C)
           have h_all_sets_in_C_closed : ∀ c ∈ C, IsClosed c := by {
