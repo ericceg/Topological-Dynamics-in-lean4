@@ -1,16 +1,17 @@
 import Mathlib
 
+open Pointwise AddAction Set
 
 
-class MySubAddAction (M : Type*) (X : Type*) (Y : Set X) [AddMonoid M] [add_action_orig : AddAction M X] where
+class AddActionRestriction (M : Type*) (X : Type*) (Y : Set X) [AddMonoid M] [add_action_orig : AddAction M X] where
   SubAction : AddAction M Y
   SubAction_eq_Action : ∀ (c : M) (x : Y), ↑(c +ᵥ x) = add_action_orig.vadd c ↑x
 
 
-open Pointwise AddAction Set
-
 
 variable {M X : Type*} [h_X_top : TopologicalSpace X] [h_X_compact : CompactSpace X] [h_X_nonempty : Nonempty X] [h_M_monoid : AddMonoid M] [h_M_X_action : AddAction M X] [h_action_continuous : ContinuousConstVAdd M X]
+
+
 
 
 /-- Theorem 1.14: In a nonempty compact metric space X with an additive Action of M on X, there exists a closed,
@@ -18,7 +19,7 @@ nonempty subset Y such that Y is M-invariant and the restricted action of M on Y
 Todo: Think about additional assumptions about the action (e.g. continuity). Maybe even consider a continuous groupaction (induced by a homeomorphism on X).
  -/
 theorem exists_minimal_invariant_subset :
-   ∃ (Y : Set X) (h_SubAction : MySubAddAction M X Y),
+   ∃ (Y : Set X) (h_SubAction : AddActionRestriction M X Y),
    have : AddAction M Y := h_SubAction.SubAction
    Y.Nonempty ∧
    IsClosed Y ∧
@@ -116,7 +117,7 @@ theorem exists_minimal_invariant_subset :
     have h_Y_isClosed := h_Y_in_S.1
     have h_Y_nonempty := h_Y_in_S.2.1
     have h_Y_inv := h_Y_in_S.2.2
-    have SubAddAction : MySubAddAction M X Y
+    have SubAddAction : AddActionRestriction M X Y
     let AddAction_on_Y : AddAction M Y := {
       vadd := λ c y => ⟨c +ᵥ y.1, h_Y_inv c y.1 y.2⟩
       zero_vadd := λ x => Subtype.ext (zero_vadd M (x : X)),
