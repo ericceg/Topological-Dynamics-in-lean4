@@ -72,15 +72,11 @@ def restriction_of_continuous_action_is_continuous {M X : Type*} [h_X_top : Topo
 
 
 
-
-variable {M X : Type*} [h_X_top : TopologicalSpace X] [h_X_compact : CompactSpace X] [h_X_nonempty : Nonempty X] [h_M_monoid : AddMonoid M] [h_M_X_action : AddAction M X] [h_action_continuous : ContinuousConstVAdd M X]
-
-
 /-- Theorem 1.14: In a nonempty compact metric space X with an additive Action of M on X, there exists a closed,
 nonempty subset Y such that Y is M-invariant and the restricted action of M on Y is minimal.
 Todo: Think about additional assumptions about the action (e.g. continuity). Maybe even consider a continuous groupaction (induced by a homeomorphism on X).
  -/
-theorem exists_minimal_invariant_subset :
+theorem exists_minimal_invariant_subset {M X : Type*} [h_X_top : TopologicalSpace X] [h_X_compact : CompactSpace X] [h_X_nonempty : Nonempty X] [h_M_monoid : AddMonoid M] [h_M_X_action : AddAction M X] [h_action_continuous : ContinuousConstVAdd M X] :
    ∃ (Y : Set X) (h_SubAction : AddActionRestriction M X Y),
    have : AddAction M Y := h_SubAction.SubAction
    Y.Nonempty ∧
