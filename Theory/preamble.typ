@@ -26,7 +26,7 @@
   set math.equation(
     supplement: none,
     numbering: x => {
-      numbering("(1.1)", counter(heading).get().first(), x) // numbering will be of the form (SECTION.EQUATION)
+      numbering("(1)", x) // numbering will be of the form (SECTION.EQUATION)
     },
   )
   // reset equation counter at beginning of each new section with level 1
@@ -265,7 +265,7 @@
   radius: 0em,        // no rounded corners when drawing a frames
   inset: 0em,
   separator: [*.*],   // add a period after the theorem number
-  base_level: 1,      // always set the base level to 1 (like this there will be only a new base number after a new section, subsections won't change the numbering)
+  base_level: 0,      // always set the base level to 1 (like this there will be only a new base number after a new section, subsections won't change the numbering)
 )
 
 

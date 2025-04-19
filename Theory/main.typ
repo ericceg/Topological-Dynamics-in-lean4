@@ -29,6 +29,7 @@
 
 
 #set enum(numbering: "(1)")
+#set heading(numbering: none)
 
 
 = Topological Dynamics 
@@ -77,7 +78,7 @@ and $T|_Y: Y ->  Y$ is minimal.
 As `mathlib4` tries to be as general as possible, we will reformulate the previous definitions and theorems using actions. On the one hand, this will make our final theorem more powerful and on the other hand, it will allow us to use the implementation of @prop-minimal-equivalence-1 more easily. 
 
 #definition()[
-A set $M$ equipped with a binary operation $+: M times M ->  M$ is called a _(additive) monoid_
+A set $M$ equipped with a binary operation $+: M times M ->  M$ is called an _(additive) monoid_
 the following hold:
 
 1. For all $a, b, c ∈ M$ we have $(a+b)+c = a+(b+c)$.
@@ -124,7 +125,7 @@ Let $M$ be an additive monoid acting continuously on a topological space $X$. Th
 - For every closed $M$-invariant subset $E subset.eq X$ we have $E = emptyset$ or $E = X$.
 ]<prop-minimal-equivalence>
 
-#link("https://leanprover-community.github.io/mathlib_docs/dynamics/minimal.html#is_minimal_iff_closed_vadd_invariant")[`Lean` implementation:]
+#link("https://leanprover-community.github.io/mathlib_docs/dynamics/minimal.html#is_minimal_iff_closed_vadd_invariant")[`Lean` implementation (`mathlib4`):]
 
 ```lean
 theorem is_minimal_iff_closed_vadd_invariant (M : Type u_1) {α : Type u_3} 
@@ -147,21 +148,55 @@ is minimal.
 
 `Lean` implementation:
 ```lean
-class MySubAddAction (M : Type*) (X : Type*) (Y : Set X) [AddMonoid M] [add_action_orig : AddAction M X] where
-  SubAction : AddAction M Y
-  SubAction_eq_Action : ∀ (c : M) (x : Y), ↑(c +ᵥ x) = add_action_orig.vadd c ↑x
-
-variable {M X : Type*} [h_X_top : TopologicalSpace X] [h_X_compact : CompactSpace X] [h_X_nonempty : Nonempty X] [h_M_monoid : AddMonoid M] [h_M_X_action : AddAction M X] [h_action_continuous : ContinuousConstVAdd M X]
-
-theorem exists_minimal_invariant_subset :
-   ∃ (Y : Set X) (h_SubAction : MySubAddAction M X Y),
+theorem exists_minimal_invariant_subset {M X : Type*} [h_X_top : TopologicalSpace X] [h_X_compact : CompactSpace X] [h_X_nonempty : Nonempty X] [h_M_monoid : AddMonoid M] [h_M_X_action : AddAction M X] [h_action_continuous : ContinuousConstVAdd M X] :
+   ∃ (Y : Set X) (h_SubAction : AddActionRestriction M X Y),
    have : AddAction M Y := h_SubAction.SubAction
    Y.Nonempty ∧
    IsClosed Y ∧
-   AddAction.IsMinimal M Y := by ...
+   AddAction.IsMinimal M Y
 ```
 
+== Preliminaries for the Proof
+
 For the proof of this theorem we need some preparations. 
+
+
+#lemma[
+  Let $M$ be an additive monoid acting on a set $X$ and let $Y subset.eq X$ be an $M$-invariant subset,
+  i.e. assume that $M Y subset.eq Y$. Then the restricted action $ 
+  M times Y ->  Y, space (m, y) |->  m y 
+  $ 
+  is an additive action of $M$ on $Y$.
+]
+
+`Lean` implementation:
+```lean
+class AddActionRestriction (M : Type*) (X : Type*) (Y : Set X) [AddMonoid M] [add_action_orig : AddAction M X] where
+  SubAction : AddAction M Y
+  SubAction_eq_Action : ∀ (c : M) (x : Y), ↑(c +ᵥ x) = add_action_orig.vadd c ↑x
+
+def invariant_subset_restricted_action {M X : Type*} {Y : Set X} [h_M_monoid : AddMonoid M] [h_M_X_action : AddAction M X] (h_Y_invariant : ∀ c : M, ∀ y ∈ Y, c +ᵥ y ∈ Y) : AddActionRestriction M X Y 
+```
+
+
+#lemma[
+  Let $M$ be an additive monoid acting continuously on a compact topological space $X$ 
+  and let $Y subset.eq X$ be an $M$-invariant subset.
+  Then the restricted action of $M$ on $Y$ is continuous.
+]
+
+`Lean` implementation:
+```lean
+class AddActionRestrictionContinuous (M X : Type*) (Y : Set X) [h_X_top : TopologicalSpace X]  [h_M_monoid : AddMonoid M] [h_M_X_action : AddAction M X] [h_action_continuous : ContinuousConstVAdd M X] where
+  (RestrictedAction : AddActionRestriction M X Y)
+  (SubAction := RestrictedAction.SubAction)
+  (SubActionContinuous : ContinuousConstVAdd M Y)
+
+def restriction_of_continuous_action_is_continuous {M X : Type*} [h_X_top : TopologicalSpace X]  [h_M_monoid : AddMonoid M] [h_M_X_action : AddAction M X] [h_action_continuous : ContinuousConstVAdd M X] (Y : Set X) (h_Y_invariant : ∀ c : M, ∀ y ∈ Y, c +ᵥ y ∈ Y) : AddActionRestrictionContinuous M X Y 
+```
+
+
+
 
 #theorem("Zorn's lemma")[
 Let $S$ be a set of subsets of a set $α$. 
@@ -178,7 +213,7 @@ $
 ]<thm-zorn-lemma>
 
 #block(breakable: false)[
-#link("https://leanprover-community.github.io/mathlib4_docs/Mathlib/Order/Zorn.html#zorn_superset")[`Lean` implementation:]
+#link("https://leanprover-community.github.io/mathlib4_docs/Mathlib/Order/Zorn.html#zorn_superset")[`Lean` implementation (`mathlib4`):]
 ```lean
 theorem zorn_superset 
     {α : Type u_1} (S : Set (Set α)) 
@@ -188,7 +223,7 @@ theorem zorn_superset
 ```
 ]
 
-
+== Proof of @thm-existence-minimal-subsystem
 
 #proof([of @thm-existence-minimal-subsystem])[
 Let $M$ be an additive monoid acting on a non-empty compact metric space $X$ and 
@@ -228,6 +263,10 @@ M times Y ->  Y, space (m, y) |->  m y.
 $
 We now show that $(Y, M)$ is minimal using @prop-minimal-equivalence. 
 Let $E subset.eq Y$ be closed with $M E subset.eq E$ and assume that $E != emptyset$. 
-Then we have $E ∈ S$ by definition of $S$. Hence using #<eq-1> we obtain $E = Y$. 
+Then we have $E ∈ S$ by definition of $S$. Hence using @eq-1 we obtain $E = Y$. 
 This proves that $(Y, M)$ is minimal by @prop-minimal-equivalence. 
 ]
+
+
+
+
