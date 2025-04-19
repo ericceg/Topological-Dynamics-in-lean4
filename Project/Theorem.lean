@@ -24,6 +24,55 @@ def invariant_subset_restricted_action {M X : Type*} {Y : Set X} [h_M_monoid : A
       exact rfl
   }
 
+
+
+class AddActionRestrictionContinuous (M X : Type*) (Y : Set X) [h_X_top : TopologicalSpace X]  [h_M_monoid : AddMonoid M] [h_M_X_action : AddAction M X] [h_action_continuous : ContinuousConstVAdd M X] where
+  (RestrictedAction : AddActionRestriction M X Y)
+  (SubAction := RestrictedAction.SubAction)
+  (SubActionContinuous : ContinuousConstVAdd M Y)
+
+def restriction_of_continuous_action_is_continuous {M X : Type*} [h_X_top : TopologicalSpace X]  [h_M_monoid : AddMonoid M] [h_M_X_action : AddAction M X] [h_action_continuous : ContinuousConstVAdd M X] (Y : Set X) (h_Y_invariant : ∀ c : M, ∀ y ∈ Y, c +ᵥ y ∈ Y) :
+  AddActionRestrictionContinuous M X Y := by {
+    have action_restricted := invariant_subset_restricted_action h_Y_invariant
+    let SubAction := action_restricted.SubAction -- IMPORTANT: Here we need to use `let` instead of `have` to avoid the problem of "forgetting" the precise definition of the subaction
+    constructor
+    · exact action_restricted
+    · have h_subaction_continuous_const_vadd : ∀ m : M, Continuous fun x : Y => m +ᵥ x := by {
+        intro m
+        let f := (fun x ↦ m +ᵥ x : X → X)
+        have h_action_continuous_on_X := h_action_continuous.continuous_const_vadd m
+        have h_action_continuous_on_Y : ContinuousOn f Y := by {
+          exact Continuous.continuousOn h_action_continuous_on_X
+        }
+        have h_action_continuous_on_X : Continuous f := by exact h_action_continuous_on_X
+        have ht : MapsTo f Y Y := by {
+          unfold MapsTo
+          intro x h_x_in_Y
+          unfold f
+          exact h_Y_invariant m x h_x_in_Y
+        }
+        have h_action_continuous_on_Y_restricted := @ContinuousOn.restrict_mapsTo X X h_X_top h_X_top f Y Y h_action_continuous_on_Y ht
+        simp_all [f]
+        have h_e : (MapsTo.restrict (fun x ↦ m +ᵥ x) Y Y ht) = (fun x : Y => m +ᵥ x) := by {
+          ext x
+          unfold MapsTo.restrict
+          unfold Subtype.map
+          simp
+          have h_action_eq := action_restricted.SubAction_eq_Action m x
+          simp_all [VAdd.vadd]
+          exact rfl
+        }
+        have h_concl : Continuous fun x : Y => m +ᵥ x := h_e ▸ h_action_continuous_on_Y_restricted
+        exact h_concl
+      }
+      exact { continuous_const_vadd := h_subaction_continuous_const_vadd }
+  }
+
+
+
+
+
+
 variable {M X : Type*} [h_X_top : TopologicalSpace X] [h_X_compact : CompactSpace X] [h_X_nonempty : Nonempty X] [h_M_monoid : AddMonoid M] [h_M_X_action : AddAction M X] [h_action_continuous : ContinuousConstVAdd M X]
 
 
@@ -132,45 +181,13 @@ theorem exists_minimal_invariant_subset :
     have h_Y_inv := h_Y_in_S.2.2
 
     -- obtain restricted action
-    have SubAddAction : AddActionRestriction M X Y := invariant_subset_restricted_action h_Y_inv
+    let RestrictedActionContinuous := restriction_of_continuous_action_is_continuous Y h_Y_inv
 
-    use SubAddAction
+    use RestrictedActionContinuous.RestrictedAction
     use h_Y_nonempty
     use h_Y_isClosed
-    let h_subaction_VAdd := SubAddAction.SubAction.toVAdd
-    have h_subaction_continuous_const_vadd : ∀ m : M, Continuous fun x : Y => m +ᵥ x := by {
-      intro m
-      let f := (fun x ↦ m +ᵥ x : X → X)
-      have h_action_continuous_on_X := h_action_continuous.continuous_const_vadd m
-      have h_action_continuous_on_Y : ContinuousOn f Y := by {
-        exact Continuous.continuousOn h_action_continuous_on_X
-      }
-      have h_action_continuous_on_X : Continuous f := by exact h_action_continuous_on_X
-      have ht : MapsTo f Y Y := by {
-        unfold MapsTo
-        intro x h_x_in_Y
-        unfold f
-        exact h_Y_inv m x h_x_in_Y
-      }
-      have h_action_continuous_on_Y_restricted := @ContinuousOn.restrict_mapsTo X X h_X_top h_X_top f Y Y h_action_continuous_on_Y ht
-      simp_all [f]
-      have h_e : (MapsTo.restrict (fun x ↦ m +ᵥ x) Y Y ht) = (fun x : Y => m +ᵥ x) := by {
-        ext x
-        unfold MapsTo.restrict
-        unfold Subtype.map
-        simp
-        have h_action_eq := SubAddAction.SubAction_eq_Action m x
-        simp_all [VAdd.vadd]
-        exact rfl
-      }
-      have h_concl : Continuous fun x : Y => m +ᵥ x := h_e ▸ h_action_continuous_on_Y_restricted
-      exact h_concl
-    }
-    have h_subaction_continuous : @ContinuousConstVAdd M Y instTopologicalSpaceSubtype SubAddAction.SubAction.toVAdd := by {
-      constructor
-      · exact h_subaction_continuous_const_vadd
-    }
-    have h1 := @isMinimal_iff_isClosed_vadd_invariant M Y h_M_monoid instTopologicalSpaceSubtype SubAddAction.SubAction h_subaction_continuous
+
+    have h1 := @isMinimal_iff_isClosed_vadd_invariant M Y h_M_monoid instTopologicalSpaceSubtype RestrictedActionContinuous.SubAction RestrictedActionContinuous.SubActionContinuous
     have h1 := h1.2
     apply h1
     intro E
@@ -178,7 +195,7 @@ theorem exists_minimal_invariant_subset :
     intro hE_inv
     by_cases hE : E.Nonempty
     · right
-      have h_Y_AddAction := SubAddAction.SubAction
+      let h_Y_AddAction := RestrictedActionContinuous.SubAction
       have h_E_in_S : ↑E ∈ S := by {
         constructor
         · exact IsClosed.trans hE_isClosed h_Y_isClosed
@@ -189,7 +206,7 @@ theorem exists_minimal_invariant_subset :
             obtain ⟨y, hyE, rfl⟩ := h_x_in_E
             have h_E_inv_under_c := hE_inv c
             have h_cy_in_E : c +ᵥ y ∈ E := h_E_inv_under_c (Set.mem_image_of_mem _ hyE)
-            have h_test := SubAddAction.SubAction_eq_Action c y
+            have h_test := RestrictedActionContinuous.RestrictedAction.SubAction_eq_Action c y
             change h_M_X_action.vadd c y ∈ Subtype.val '' E
             rw [←h_test]
             exact mem_image_of_mem Subtype.val h_cy_in_E -- obtained this using `hint`
