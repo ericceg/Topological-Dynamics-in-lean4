@@ -9,9 +9,22 @@ class AddActionRestriction (M : Type*) (X : Type*) (Y : Set X) [AddMonoid M] [ad
 
 
 
+
+def invariant_subset_restricted_action {M X : Type*} {Y : Set X} [h_M_monoid : AddMonoid M] [h_M_X_action : AddAction M X] (h_Y_invariant : ∀ c : M, ∀ y ∈ Y, c +ᵥ y ∈ Y) :
+  AddActionRestriction M X Y := by {
+    let AddAction_on_Y : AddAction M Y := {
+      vadd := λ c y => ⟨c +ᵥ y.1, h_Y_invariant c y.1 y.2⟩
+      zero_vadd := λ x => Subtype.ext (zero_vadd M (x : X)),
+      add_vadd := λ c₁ c₂ x => Subtype.ext (add_vadd c₁ c₂ (x : X))
+    } -- IMPORTANT: Here we need to use `let` instead of `have` to avoid the problem of "forgetting" the precise definition of AddAction_on_Y.vadd
+    -- Rough explanation: `let` defines local values while `have` introduces facts
+    constructor
+    · intro c x
+      change ↑(AddAction_on_Y.vadd c x) = h_M_X_action.vadd c ↑x
+      exact rfl
+  }
+
 variable {M X : Type*} [h_X_top : TopologicalSpace X] [h_X_compact : CompactSpace X] [h_X_nonempty : Nonempty X] [h_M_monoid : AddMonoid M] [h_M_X_action : AddAction M X] [h_action_continuous : ContinuousConstVAdd M X]
-
-
 
 
 /-- Theorem 1.14: In a nonempty compact metric space X with an additive Action of M on X, there exists a closed,
@@ -117,21 +130,13 @@ theorem exists_minimal_invariant_subset :
     have h_Y_isClosed := h_Y_in_S.1
     have h_Y_nonempty := h_Y_in_S.2.1
     have h_Y_inv := h_Y_in_S.2.2
-    have SubAddAction : AddActionRestriction M X Y
-    let AddAction_on_Y : AddAction M Y := {
-      vadd := λ c y => ⟨c +ᵥ y.1, h_Y_inv c y.1 y.2⟩
-      zero_vadd := λ x => Subtype.ext (zero_vadd M (x : X)),
-      add_vadd := λ c₁ c₂ x => Subtype.ext (add_vadd c₁ c₂ (x : X))
-    } -- IMPORTANT: Here we need to use `let` instead of `have` to avoid the problem of "forgetting" the precise definition of AddAction_on_Y.vadd
-    -- Rough explanation: `let` defines local values while `have` introduces facts
-    constructor
-    · intro c x
-      change ↑(AddAction_on_Y.vadd c x) = h_M_X_action.vadd c ↑x
-      exact rfl
+
+    -- obtain restricted action
+    have SubAddAction : AddActionRestriction M X Y := invariant_subset_restricted_action h_Y_inv
+
     use SubAddAction
     use h_Y_nonempty
     use h_Y_isClosed
-    -- #check SubAddAction.SubAction.1
     let h_subaction_VAdd := SubAddAction.SubAction.toVAdd
     have h_subaction_continuous_const_vadd : ∀ m : M, Continuous fun x : Y => m +ᵥ x := by {
       intro m
