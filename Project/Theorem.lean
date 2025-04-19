@@ -182,12 +182,15 @@ theorem exists_minimal_invariant_subset :
 
     -- obtain restricted action
     let RestrictedActionContinuous := restriction_of_continuous_action_is_continuous Y h_Y_inv
+    let h_subaction_continuous := RestrictedActionContinuous.SubActionContinuous
+    let RestrictedAction := RestrictedActionContinuous.RestrictedAction
+    let SubAction := RestrictedAction.SubAction
 
-    use RestrictedActionContinuous.RestrictedAction
+    use RestrictedAction
     use h_Y_nonempty
     use h_Y_isClosed
 
-    have h1 := @isMinimal_iff_isClosed_vadd_invariant M Y h_M_monoid instTopologicalSpaceSubtype RestrictedActionContinuous.SubAction RestrictedActionContinuous.SubActionContinuous
+    have h1 := @isMinimal_iff_isClosed_vadd_invariant M Y h_M_monoid instTopologicalSpaceSubtype SubAction h_subaction_continuous
     have h1 := h1.2
     apply h1
     intro E
@@ -195,7 +198,7 @@ theorem exists_minimal_invariant_subset :
     intro hE_inv
     by_cases hE : E.Nonempty
     · right
-      let h_Y_AddAction := RestrictedActionContinuous.SubAction
+      let h_Y_AddAction := SubAction
       have h_E_in_S : ↑E ∈ S := by {
         constructor
         · exact IsClosed.trans hE_isClosed h_Y_isClosed
@@ -206,7 +209,7 @@ theorem exists_minimal_invariant_subset :
             obtain ⟨y, hyE, rfl⟩ := h_x_in_E
             have h_E_inv_under_c := hE_inv c
             have h_cy_in_E : c +ᵥ y ∈ E := h_E_inv_under_c (Set.mem_image_of_mem _ hyE)
-            have h_test := RestrictedActionContinuous.RestrictedAction.SubAction_eq_Action c y
+            have h_test := RestrictedAction.SubAction_eq_Action c y
             change h_M_X_action.vadd c y ∈ Subtype.val '' E
             rw [←h_test]
             exact mem_image_of_mem Subtype.val h_cy_in_E -- obtained this using `hint`
