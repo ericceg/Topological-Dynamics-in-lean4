@@ -110,6 +110,16 @@ $
   $(X, M)$ is called _minimal_ if every orbit is dense.
 ]
 
+#block[
+#link("")[`Lean` implementation (`mathlib4`) (ADD LINK):]
+
+```lean
+class AddAction.IsMinimal (M α : Type*) [AddMonoid M] [TopologicalSpace α] [AddAction M α] :
+    Prop where
+  dense_orbit : ∀ x : α, Dense (AddAction.orbit M x)
+```
+]
+
 #definition()[
 We say that the action of $M$ on $X$ is _continuous_ if for every $m ∈ M$ the map 
 $X -> X, space x |->  m x$ is continuous. 
@@ -117,25 +127,7 @@ $X -> X, space x |->  m x$ is continuous.
 
 = Existence of Minimal Subsystems
 
-#proposition()[
-Let $M$ be an additive monoid acting continuously on a topological space $X$. The following are equivalent:
-
-- $(X, M)$ is minimal. 
-
-- For every closed $M$-invariant subset $E subset.eq X$ we have $E = emptyset$ or $E = X$.
-]<prop-minimal-equivalence>
-
-#link("https://leanprover-community.github.io/mathlib_docs/dynamics/minimal.html#is_minimal_iff_closed_vadd_invariant")[`Lean` implementation (`mathlib4`):]
-
-```lean
-theorem is_minimal_iff_closed_vadd_invariant (M : Type u_1) {α : Type u_3} 
-    [add_monoid M] [topological_space α] [add_action M α] 
-    [has_continuous_const_vadd M α] :
-  add_action.is_minimal M α ↔ 
-  ∀ (s : set α), is_closed s → (∀ (c : M), c +ᵥ s ⊆ s) → s = ∅ ∨ s = set.univ
-```
-
-We will use this to prove the following theorem. 
+The goal of this section is to prove the following theorem:
 
 #theorem()[
 Let $M$ be an additive monoid acting continuously on a non-empty compact topological space $X$.
@@ -156,9 +148,32 @@ theorem exists_minimal_invariant_subset {M X : Type*} [h_X_top : TopologicalSpac
    AddAction.IsMinimal M Y
 ```
 
-== Preliminaries for the Proof
+We start with a reformulation of the notion of a minimal system.
 
-For the proof of this theorem we need some preparations. 
+#proposition()[
+Let $M$ be an additive monoid acting continuously on a topological space $X$. The following are equivalent:
+
+- $(X, M)$ is minimal. 
+
+- For every closed $M$-invariant subset $E subset.eq X$ we have $E = emptyset$ or $E = X$.
+]<prop-minimal-equivalence>
+
+Conveniently, this reformulation is already implemented in `lean`.
+
+#block(breakable: false)[
+#link("https://leanprover-community.github.io/mathlib_docs/dynamics/minimal.html#is_minimal_iff_closed_vadd_invariant")[`Lean` implementation (`mathlib4`):]
+
+```lean
+theorem is_minimal_iff_closed_vadd_invariant (M : Type u_1) {α : Type u_3} 
+    [add_monoid M] [topological_space α] [add_action M α] 
+    [has_continuous_const_vadd M α] :
+  add_action.is_minimal M α ↔ 
+  ∀ (s : set α), is_closed s → (∀ (c : M), c +ᵥ s ⊆ s) → s = ∅ ∨ s = set.univ
+```
+]
+
+
+For the proof of @thm-existence-minimal-subsystem we need two more lemmas that are not yet implemented in `lean`. 
 
 
 #lemma[
@@ -167,7 +182,7 @@ For the proof of this theorem we need some preparations.
   M times Y ->  Y, space (m, y) |->  m y 
   $ 
   is an additive action of $M$ on $Y$.
-]
+]<lemma-restricted-action>
 
 `Lean` implementation:
 ```lean
@@ -183,7 +198,7 @@ def invariant_subset_restricted_action {M X : Type*} {Y : Set X} [h_M_monoid : A
   Let $M$ be an additive monoid acting continuously on a compact topological space $X$ 
   and let $Y subset.eq X$ be an $M$-invariant subset.
   Then the restricted action of $M$ on $Y$ is continuous.
-]
+]<lemma-restricted-action-cont>
 
 `Lean` implementation:
 ```lean
@@ -195,7 +210,7 @@ class AddActionRestrictionContinuous (M X : Type*) (Y : Set X) [h_X_top : Topolo
 def restriction_of_continuous_action_is_continuous {M X : Type*} [h_X_top : TopologicalSpace X]  [h_M_monoid : AddMonoid M] [h_M_X_action : AddAction M X] [h_action_continuous : ContinuousConstVAdd M X] (Y : Set X) (h_Y_invariant : ∀ c : M, ∀ y ∈ Y, c +ᵥ y ∈ Y) : AddActionRestrictionContinuous M X Y 
 ```
 
-
+Besides @lemma-restricted-action and @lemma-restricted-action-cont, we state some more general results that will be needed and that are already implemented in `lean`. 
 
 
 #theorem("Zorn's lemma")[
@@ -223,7 +238,29 @@ theorem zorn_superset
 ```
 ]
 
-== Proof of @thm-existence-minimal-subsystem
+
+
+#theorem("Cantor's intersection theorem")[
+Any intersection of a directed family of nonempty compact closed sets is nonempty.
+]
+
+#block(breakable: false)[
+#link("")[`Lean` implementation (`mathlib4`) (ADD LINK):]
+```lean
+theorem IsCompact.nonempty_sInter_of_directed_nonempty_isCompact_isClosed
+    {S : Set (Set X)} [hS : Nonempty S] (hSd : DirectedOn (· ⊇ ·) S) 
+    (hSn : ∀ U ∈ S, U.Nonempty) (hSc : ∀ U ∈ S, IsCompact U) 
+    (hScl : ∀ U ∈ S, IsClosed U) : 
+    (⋂₀ S).Nonempty 
+```
+]
+
+
+
+
+
+We now turn to the proof of our main theorem on the existence of minimal subsystems. 
+
 
 #proof([of @thm-existence-minimal-subsystem])[
 Let $M$ be an additive monoid acting on a non-empty compact metric space $X$ and 
