@@ -242,7 +242,7 @@ theorem zorn_superset
 
 #theorem("Cantor's intersection theorem")[
 Any intersection of a directed family of nonempty compact closed sets is nonempty.
-]
+]<thm-cantor-intersection>
 
 #block(breakable: false)[
 #link("")[`Lean` implementation (`mathlib4`) (ADD LINK):]
@@ -268,8 +268,8 @@ assume that $(X, M)$ is minimal. Define the family $
 S := { Y subset.eq X bar Y != emptyset, space  Y "closed", space  M Y subset.eq Y}. 
 $ 
 We want to apply Zorn's lemma to find a minimal element in $cal(E)$. 
-Let $C subset.eq S$ be a chain. Define $ 
-l := inter.big_(Y ∈ C) Y . 
+Let $C subset.eq S$ be any chain and define $ 
+l := inter.big_(Y ∈ C) Y subset.eq X . 
 $ 
 We now verify that $l ∈ S$. 
 
@@ -279,7 +279,8 @@ We now verify that $l ∈ S$.
 
 - First observe that for every $Y ∈ C$ we have $Y ∈ S$ and thus $Y subset.eq X$ and $Y$ is closed 
   by definition of $S$. Since $X$ is compact this implies that $Y$ is compact. 
-  Hence by #link("https://en.wikipedia.org/wiki/Cantor%27s_intersection_theorem")[Cantor's intersection theorem] we obtain $l != emptyset$. 
+  Moreover, every $Y ∈ C$ is non-empty by definition of $S$.
+  Hence by @thm-cantor-intersection we obtain $l != emptyset$. 
 
 - Let $y ∈ l$ and $m ∈ M$ be arbitrary. Then we have $ 
 ∀ Y ∈ C: space  m y ∈ Y
@@ -295,11 +296,15 @@ $
 Hence by @thm-zorn-lemma there exists an element $Y ∈ S$ such that $ 
 ∀ Z ∈ S: space  Z subset.eq Y ==> Z = Y. #<eq-1>
 $ 
-Observe that since $Y ∈ S$ we have a well-defined action $ 
-M times Y ->  Y, space (m, y) |->  m y. 
+Observe that by definition of $S$ we have $M Y subset.eq Y$ and thus by @lemma-restricted-action
+the restricted action $ 
+M times Y ->  Y, space (m, y) |->  m y
 $
+is well-defined. Moreover, since $M$ acts continuously on $X$, by @lemma-restricted-action-cont 
+we obtain that the restricted action of $M$ on $Y$ is again continuous. 
+
 We now show that $(Y, M)$ is minimal using @prop-minimal-equivalence. 
-Let $E subset.eq Y$ be closed with $M E subset.eq E$ and assume that $E != emptyset$. 
+Let $E subset.eq Y$ be any closed subset with $M E subset.eq E$ and assume that $E != emptyset$. 
 Then we have $E ∈ S$ by definition of $S$. Hence using @eq-1 we obtain $E = Y$. 
 This proves that $(Y, M)$ is minimal by @prop-minimal-equivalence. 
 ]
