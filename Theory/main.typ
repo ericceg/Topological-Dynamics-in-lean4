@@ -111,7 +111,7 @@ $
 ]
 
 #block[
-#link("")[`Lean` implementation (`mathlib4`) (ADD LINK):]
+#link("https://leanprover-community.github.io/mathlib4_docs/Mathlib/Dynamics/Minimal.html#AddAction.IsMinimal")[`Lean` implementation (`mathlib4`):]
 
 ```lean
 class AddAction.IsMinimal (M α : Type*) [AddMonoid M] [TopologicalSpace α] [AddAction M α] :
@@ -161,14 +161,11 @@ Let $M$ be an additive monoid acting continuously on a topological space $X$. Th
 Conveniently, this reformulation is already implemented in `lean`.
 
 #block(breakable: false)[
-#link("https://leanprover-community.github.io/mathlib_docs/dynamics/minimal.html#is_minimal_iff_closed_vadd_invariant")[`Lean` implementation (`mathlib4`):]
+#link("https://leanprover-community.github.io/mathlib4_docs/Mathlib/Dynamics/Minimal.html#isMinimal_iff_isClosed_vadd_invariant")[`Lean` implementation (`mathlib4`):]
 
 ```lean
-theorem is_minimal_iff_closed_vadd_invariant (M : Type u_1) {α : Type u_3} 
-    [add_monoid M] [topological_space α] [add_action M α] 
-    [has_continuous_const_vadd M α] :
-  add_action.is_minimal M α ↔ 
-  ∀ (s : set α), is_closed s → (∀ (c : M), c +ᵥ s ⊆ s) → s = ∅ ∨ s = set.univ
+theorem isMinimal_iff_isClosed_vadd_invariant (M : Type u_1) {α : Type u_3} [AddMonoid M] [TopologicalSpace α] [AddAction M α] [ContinuousConstVAdd M α] :
+AddAction.IsMinimal M α ↔ ∀ (s : Set α), IsClosed s → (∀ (c : M), c +ᵥ s ⊆ s) → s = ∅ ∨ s = Set.univ
 ```
 ]
 
@@ -241,11 +238,11 @@ theorem zorn_superset
 
 
 #theorem("Cantor's intersection theorem")[
-Any intersection of a directed family of nonempty compact closed sets is nonempty.
+The intersection of a directed family of nonempty compact closed sets is nonempty.
 ]<thm-cantor-intersection>
 
 #block(breakable: false)[
-#link("")[`Lean` implementation (`mathlib4`) (ADD LINK):]
+#link("https://leanprover-community.github.io/mathlib4_docs/Mathlib/Topology/Compactness/Compact.html#IsCompact.nonempty_sInter_of_directed_nonempty_isCompact_isClosed")[`Lean` implementation (`mathlib4`):]
 ```lean
 theorem IsCompact.nonempty_sInter_of_directed_nonempty_isCompact_isClosed
     {S : Set (Set X)} [hS : Nonempty S] (hSd : DirectedOn (· ⊇ ·) S) 
@@ -263,7 +260,7 @@ We now turn to the proof of our main theorem on the existence of minimal subsyst
 
 
 #proof([of @thm-existence-minimal-subsystem])[
-Let $M$ be an additive monoid acting on a non-empty compact metric space $X$ and 
+Let $M$ be an additive monoid acting on a non-empty compact topological space $X$ and 
 assume that $(X, M)$ is minimal. Define the family $ 
 S := { Y subset.eq X bar Y != emptyset, space  Y "closed", space  M Y subset.eq Y}. 
 $ 
@@ -310,5 +307,4 @@ This proves that $(Y, M)$ is minimal by @prop-minimal-equivalence.
 ]
 
 
-
-
+The full `lean` implementation of @thm-existence-minimal-subsystem, including its proof, can be found on #link("https://github.com/ericceg/lean-theorem-minimal-subsystem/blob/master/Project/Theorem.lean")[`https://github.com/ericceg/lean-theorem-minimal-subsystem/blob/master/Project/Theorem.lean`].
