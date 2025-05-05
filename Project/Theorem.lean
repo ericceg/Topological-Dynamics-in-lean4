@@ -3,34 +3,58 @@ import Mathlib
 open Pointwise AddAction Set
 
 
-class AddActionRestriction (M : Type*) (X : Type*) (Y : Set X) [AddMonoid M] [add_action_orig : AddAction M X] where
+/--
+Define `AddActionRestriction` class:
+Given an additive action of an additive monoid M on a set X and a subset Y ⊆ X define the restriction of the action to Y subject to existence.
+-/
+class AddActionRestriction (M : Type*) (X : Type*) (Y : Set X)
+  [AddMonoid M] [add_action_orig : AddAction M X] where
   SubAction : AddAction M Y
   SubAction_eq_Action : ∀ (c : M) (x : Y), ↑(c +ᵥ x) = add_action_orig.vadd c ↑x
 
 
 
-
-def invariant_subset_restricted_action {M X : Type*} {Y : Set X} [h_M_monoid : AddMonoid M] [h_M_X_action : AddAction M X] (h_Y_invariant : ∀ c : M, ∀ y ∈ Y, c +ᵥ y ∈ Y) :
+/--
+Lemma 13. Let M be an additive monoid acting on a set X and let Y ⊆ X be an M-
+invariant subset, i.e. assume that MY ⊆ Y. Then the restricted action
+M × Y → Y , (m, y) ↦ my
+is a well-defined additive action of M on Y.
+-/
+def invariant_subset_restricted_action
+  {M X : Type*} {Y : Set X}
+  [h_M_monoid : AddMonoid M] [h_M_X_action : AddAction M X]
+  (h_Y_invariant : ∀ c : M, ∀ y ∈ Y, c +ᵥ y ∈ Y) :
   AddActionRestriction M X Y := by {
-    let AddAction_on_Y : AddAction M Y := {
-      vadd := λ c y => ⟨c +ᵥ y.1, h_Y_invariant c y.1 y.2⟩
-      zero_vadd := λ x => Subtype.ext (zero_vadd M (x : X)),
-      add_vadd := λ c₁ c₂ x => Subtype.ext (add_vadd c₁ c₂ (x : X))
-    } -- IMPORTANT: Here we need to use `let` instead of `have` to avoid the problem of "forgetting" the precise definition of AddAction_on_Y.vadd
-    -- Rough explanation: `let` defines local values while `have` introduces facts
-    constructor
-    · intro c x
-      change ↑(AddAction_on_Y.vadd c x) = h_M_X_action.vadd c ↑x
-      exact rfl
+
+  -- Define the restricted action on Y
+  -- IMPORTANT: `let` is used (not `have`) to retain precise definition of `vadd`
+  let AddAction_on_Y : AddAction M Y := {
+    vadd := λ c y => ⟨c +ᵥ y.1, h_Y_invariant c y.1 y.2⟩,
+    zero_vadd := λ x => Subtype.ext (zero_vadd M (x : X)),
+    add_vadd := λ c₁ c₂ x => Subtype.ext (add_vadd c₁ c₂ (x : X))
   }
 
+  constructor
+  · intro c x
+    change ↑(AddAction_on_Y.vadd c x) = h_M_X_action.vadd c ↑x
+    exact rfl
+}
 
 
+/--
+A version of `AddActionRestriction` where the restricted action is also continuous.
+-/
 class AddActionRestrictionContinuous (M X : Type*) (Y : Set X) [h_X_top : TopologicalSpace X]  [h_M_monoid : AddMonoid M] [h_M_X_action : AddAction M X] [h_action_continuous : ContinuousConstVAdd M X] where
   (RestrictedAction : AddActionRestriction M X Y)
   (SubAction := RestrictedAction.SubAction)
   (SubActionContinuous : ContinuousConstVAdd M Y)
 
+
+/--
+Lemma 14. Let M be an additive monoid acting continuously on a compact topological
+space X and let Y ⊆ X be an M-invariant subset. Then the restricted action of M on Y is
+continuous.
+-/
 def restriction_of_continuous_action_is_continuous {M X : Type*} [h_X_top : TopologicalSpace X]  [h_M_monoid : AddMonoid M] [h_M_X_action : AddAction M X] [h_action_continuous : ContinuousConstVAdd M X] (Y : Set X) (h_Y_invariant : ∀ c : M, ∀ y ∈ Y, c +ᵥ y ∈ Y) :
   AddActionRestrictionContinuous M X Y := by {
     have action_restricted := invariant_subset_restricted_action h_Y_invariant
@@ -72,9 +96,12 @@ def restriction_of_continuous_action_is_continuous {M X : Type*} [h_X_top : Topo
 
 
 
-/-- Theorem 1.14: In a nonempty compact metric space X with an additive Action of M on X, there exists a closed,
-nonempty subset Y such that Y is M-invariant and the restricted action of M on Y is minimal.
-Todo: Think about additional assumptions about the action (e.g. continuity). Maybe even consider a continuous groupaction (induced by a homeomorphism on X).
+/--
+Theorem 11. Let M be an additive monoid acting continuously on a non-empty compact
+topological space X. If (M, X) is minimal then there exists a closed non-empty Y ⊆ X such
+that MY ⊆ Y and the restricted action
+M × Y → Y, (m, y) ↦ my
+is minimal.
  -/
 theorem exists_minimal_invariant_subset {M X : Type*} [h_X_top : TopologicalSpace X] [h_X_compact : CompactSpace X] [h_X_nonempty : Nonempty X] [h_M_monoid : AddMonoid M] [h_M_X_action : AddAction M X] [h_action_continuous : ContinuousConstVAdd M X] :
    ∃ (Y : Set X) (h_SubAction : AddActionRestriction M X Y),

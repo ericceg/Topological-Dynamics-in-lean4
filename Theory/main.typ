@@ -31,6 +31,8 @@
 #set enum(numbering: "(1)")
 #set heading(numbering: none)
 
+#let link_to_lean_implementation = link("https://github.com/ericceg/lean-theorem-minimal-subsystem")[`Lean` implementation (`github.com/ericceg/lean-theorem-minimal-subsystem`):]
+
 
 = Topological Dynamics 
 
@@ -98,7 +100,7 @@ the following hold:
 ]
 
 
-Let $M$ be an additive monoid acting on a compact metric space $X$. 
+Let $M$ be an additive monoid acting on a compact topological space $X$. 
 
 #definition()[
 For any $x ∈ X$ define the _orbit_ of $x$ by $ 
@@ -138,7 +140,7 @@ $
 is minimal.
 ]<thm-existence-minimal-subsystem>
 
-`Lean` implementation:
+#link_to_lean_implementation
 ```lean
 theorem exists_minimal_invariant_subset {M X : Type*} [h_X_top : TopologicalSpace X] [h_X_compact : CompactSpace X] [h_X_nonempty : Nonempty X] [h_M_monoid : AddMonoid M] [h_M_X_action : AddAction M X] [h_action_continuous : ContinuousConstVAdd M X] :
    ∃ (Y : Set X) (h_SubAction : AddActionRestriction M X Y),
@@ -178,10 +180,10 @@ For the proof of @thm-existence-minimal-subsystem we need two more lemmas that a
   i.e. assume that $M Y subset.eq Y$. Then the restricted action $ 
   M times Y ->  Y, space (m, y) |->  m y 
   $ 
-  is an additive action of $M$ on $Y$.
+  is a well-defined additive action of $M$ on $Y$.
 ]<lemma-restricted-action>
 
-`Lean` implementation:
+#link_to_lean_implementation
 ```lean
 class AddActionRestriction (M : Type*) (X : Type*) (Y : Set X) [AddMonoid M] [add_action_orig : AddAction M X] where
   SubAction : AddAction M Y
@@ -197,7 +199,7 @@ def invariant_subset_restricted_action {M X : Type*} {Y : Set X} [h_M_monoid : A
   Then the restricted action of $M$ on $Y$ is continuous.
 ]<lemma-restricted-action-cont>
 
-`Lean` implementation:
+#link_to_lean_implementation
 ```lean
 class AddActionRestrictionContinuous (M X : Type*) (Y : Set X) [h_X_top : TopologicalSpace X]  [h_M_monoid : AddMonoid M] [h_M_X_action : AddAction M X] [h_action_continuous : ContinuousConstVAdd M X] where
   (RestrictedAction : AddActionRestriction M X Y)
@@ -213,9 +215,6 @@ Besides @lemma-restricted-action and @lemma-restricted-action-cont, we state som
 #theorem("Zorn's lemma")[
 Let $S$ be a set of subsets of a set $α$. 
 Assume that for every chain
-#footnote[
-  Recall that a chain is a totally ordered subset of a partially ordered set.
-] 
 $C subset.eq S$ there exists an element $l ∈ S$ such that $ 
 ∀ s ∈ C: space  l subset.eq s. 
 $ 
@@ -307,4 +306,6 @@ This proves that $(Y, M)$ is minimal by @prop-minimal-equivalence.
 ]
 
 
-The full `lean` implementation of @thm-existence-minimal-subsystem, including its proof, can be found on #link("https://github.com/ericceg/lean-theorem-minimal-subsystem/blob/master/Project/Theorem.lean")[`https://github.com/ericceg/lean-theorem-minimal-subsystem/blob/master/Project/Theorem.lean`].
+The full `lean` implementation of @thm-existence-minimal-subsystem, including its proof, can be found on #link("https://github.com/ericceg/lean-theorem-minimal-subsystem/blob/master/Project/Theorem.lean")[`github.com/ericceg/lean-theorem-minimal-subsystem`].
+
+
