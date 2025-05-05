@@ -237,7 +237,7 @@ theorem zorn_superset
 
 
 #theorem("Cantor's intersection theorem")[
-The intersection of a directed family of nonempty compact closed sets is nonempty.
+The intersection of a non-empty directed family of nonempty compact closed sets is nonempty.
 ]<thm-cantor-intersection>
 
 #block(breakable: false)[
@@ -263,11 +263,14 @@ Let $M$ be an additive monoid acting on a non-empty compact topological space $X
 assume that $(X, M)$ is minimal. Define the family $ 
 S := { Y subset.eq X bar Y != emptyset, space  Y "closed", space  M Y subset.eq Y}. 
 $ 
-We want to apply Zorn's lemma to find a minimal element in $cal(E)$. 
-Let $C subset.eq S$ be any chain and define $ 
+We want to apply Zorn's lemma to find a minimal element in $S$. 
+Let $C subset.eq S$ be any chain.
+Observe that if $C = emptyset$ then we can take $l := X$ and we are done. Hence we may assume that $C != emptyset$,
+which is important to be able to apply @thm-cantor-intersection.
+Now define $ 
 l := inter.big_(Y ∈ C) Y subset.eq X . 
 $ 
-We now verify that $l ∈ S$. 
+We verify that $l ∈ S$. 
 
 - Since for all $Y ∈ C$ we have $Y subset.eq X$ we obtain $l subset.eq X$. 
 

@@ -103,27 +103,42 @@ that MY ⊆ Y and the restricted action
 M × Y → Y, (m, y) ↦ my
 is minimal.
  -/
-theorem exists_minimal_invariant_subset {M X : Type*} [h_X_top : TopologicalSpace X] [h_X_compact : CompactSpace X] [h_X_nonempty : Nonempty X] [h_M_monoid : AddMonoid M] [h_M_X_action : AddAction M X] [h_action_continuous : ContinuousConstVAdd M X] :
+theorem exists_minimal_invariant_subset {M X : Type*}
+  [h_X_top : TopologicalSpace X] [h_X_compact : CompactSpace X] [h_X_nonempty : Nonempty X]
+  [h_M_monoid : AddMonoid M] [h_M_X_action : AddAction M X] [h_action_continuous : ContinuousConstVAdd M X] :
    ∃ (Y : Set X) (h_SubAction : AddActionRestriction M X Y),
    have : AddAction M Y := h_SubAction.SubAction
    Y.Nonempty ∧
    IsClosed Y ∧
    AddAction.IsMinimal M Y := by {
+
+    -- define the set S of closed non-empty subsets of X that are invariant under the action of M
     let S := { Y : Set X | IsClosed Y ∧ Y.Nonempty ∧ ∀ c : M, ∀ x ∈ Y, c +ᵥ x ∈ Y }
     have minimal_set: ∃ Y ∈ S, ∀ Z ∈ S, Z ⊆ Y → Y = Z := by {
+
+      -- specialize Zorn's lemma to the set S
       have zorn_concl := zorn_superset S
       unfold Minimal at zorn_concl
-      have hc := zorn_concl (
+
+      have h_existence_minimal_element := zorn_concl (
         by
         intro C
         intro h
-        intro h_is_chain -- h_C_nonempty
+        intro h_is_chain
+
+        -- distinguish between the cases where C is empty and where C is non-empty
         by_cases h_C_nonempty : Nonempty ↑C -- needed to use `IsCompact.nonempty_sInter_of_directed_nonempty_isCompact_isClosed`
+
+        -- CASE 1: C is empty
         case neg := by
           have h_C_empty : C = ∅ := by {
             exact not_nonempty_iff_eq_empty'.mp h_C_nonempty
           }
+
+          -- show that S is non-empty
           have : ∃ (x : Set X), x ∈ S := by {
+
+            -- use X to witness the non-emptiness of S
             let X' := { x : X | True }
             use X'
             unfold S
@@ -145,7 +160,11 @@ theorem exists_minimal_invariant_subset {M X : Type*} [h_X_top : TopologicalSpac
           constructor
           · exact hx
           · simp_all only [le_eq_subset, empty_subset, IsChain.empty, nonempty_subtype, mem_empty_iff_false, exists_const, not_false_eq_true, IsEmpty.forall_iff, implies_true] -- obtained this using `hint`
+
+        -- CASE 2: C is non-empty
         case pos := by
+
+          -- use l := ⋂₀ C
           use (⋂₀ C)
           have h_all_sets_in_C_closed : ∀ c ∈ C, IsClosed c := by {
             intro c h_c_in_C
@@ -164,6 +183,8 @@ theorem exists_minimal_invariant_subset {M X : Type*} [h_X_top : TopologicalSpac
             exact IsClosed.isCompact (h_all_sets_in_C_closed c h_c_in_C) -- obtained this using `hint`
           }
           constructor
+
+          -- show l ∈ S
           · constructor
             · exact isClosed_sInter h_all_sets_in_C_closed
             · constructor
@@ -185,17 +206,21 @@ theorem exists_minimal_invariant_subset {M X : Type*} [h_X_top : TopologicalSpac
                   exact h_E_inv c x h_x_in_E
                 }
                 exact h_x_in_all_C
+
+          -- show ∀ s ∈ C: l ⊆ s
           · intro s h_s_in_C
             unfold sInter
             exact fun ⦃a⦄ a ↦ a s h_s_in_C -- obtained this using `hint`
         )
-      obtain ⟨Y, hY, hY_minimal⟩ := hc
+      obtain ⟨Y, hY, hY_minimal⟩ := h_existence_minimal_element
       use Y, hY
       intro Z hZ
       intro h_Y_subset_Z
       have h_new := hY_minimal hZ h_Y_subset_Z
       exact Subset.antisymm (hY_minimal hZ h_Y_subset_Z) h_Y_subset_Z -- obtained this using `hint`
       }
+
+    -- use the minimal set Y obtained from Zorn's lemma
     obtain ⟨Y, h_Y⟩ :=  minimal_set
     use Y
     have h_Y_in_S := h_Y.1
@@ -203,7 +228,7 @@ theorem exists_minimal_invariant_subset {M X : Type*} [h_X_top : TopologicalSpac
     have h_Y_nonempty := h_Y_in_S.2.1
     have h_Y_inv := h_Y_in_S.2.2
 
-    -- obtain restricted action
+    -- obtain restricted action (and use Lemma 14)
     let RestrictedActionContinuous := restriction_of_continuous_action_is_continuous Y h_Y_inv
     let h_subaction_continuous := RestrictedActionContinuous.SubActionContinuous
     let RestrictedAction := RestrictedActionContinuous.RestrictedAction
@@ -213,6 +238,7 @@ theorem exists_minimal_invariant_subset {M X : Type*} [h_X_top : TopologicalSpac
     use h_Y_nonempty
     use h_Y_isClosed
 
+    -- apply Proposition 12
     have h1 := @isMinimal_iff_isClosed_vadd_invariant M Y h_M_monoid instTopologicalSpaceSubtype SubAction h_subaction_continuous
     have h1 := h1.2
     apply h1
