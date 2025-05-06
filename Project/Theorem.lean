@@ -258,9 +258,9 @@ theorem exists_minimal_invariant_subset {M X : Type*}
             obtain ⟨y, hyE, rfl⟩ := h_x_in_E
             have h_E_inv_under_c := hE_inv c
             have h_cy_in_E : c +ᵥ y ∈ E := h_E_inv_under_c (Set.mem_image_of_mem _ hyE)
-            have h_test := RestrictedAction.SubAction_eq_Action c y
+            have h_SubAction_eq_Action := RestrictedAction.SubAction_eq_Action c y
             change h_M_X_action.vadd c y ∈ Subtype.val '' E
-            rw [←h_test]
+            rw [←h_SubAction_eq_Action]
             exact mem_image_of_mem Subtype.val h_cy_in_E -- obtained this using `hint`
       }
       let E' := Subtype.val '' E
@@ -270,11 +270,11 @@ theorem exists_minimal_invariant_subset {M X : Type*}
       have h_E'_sub_Y : E' ⊆ Y := by {
         exact Subtype.coe_image_subset Y E
       }
-      have h2 := h_Y.2
-      have h2 := h2 E'
-      have h2 := h2 h_E'_in_S
-      have h2 := h2 h_E'_sub_Y
-      exact eq_univ_of_image_val_eq (id (Eq.symm h2))
+      have h_Y_is_minimal := h_Y.2
+      have h_Y_is_minimal := h_Y_is_minimal E'
+      have h_Y_is_minimal := h_Y_is_minimal h_E'_in_S
+      have h_Y_is_minimal := h_Y_is_minimal h_E'_sub_Y
+      exact eq_univ_of_image_val_eq (id (Eq.symm h_Y_is_minimal))
     · left
       exact Set.not_nonempty_iff_eq_empty.mp hE
    }
