@@ -10,8 +10,7 @@ Given an additive action of an additive monoid M on a set X and a subset Y ⊆ X
 class AddActionRestriction (M : Type*) (X : Type*) (Y : Set X)
   [AddMonoid M] [add_action_orig : AddAction M X] where
   SubAction : AddAction M Y
-  SubAction_eq_Action : ∀ (c : M) (x : Y), ↑(c +ᵥ x) = add_action_orig.vadd c ↑x
-
+  SubAction_eq_Action : ∀ (c : M) (x : Y), ↑(SubAction.vadd c x) = add_action_orig.vadd c ↑x -- we need to use this instead of ↑(c +ᵥ x) = c +ᵥ ↑x to make it clear which action to use
 
 
 /--
@@ -83,8 +82,7 @@ def restriction_of_continuous_action_is_continuous {M X : Type*} [h_X_top : Topo
           unfold Subtype.map
           simp
           have h_action_eq := action_restricted.SubAction_eq_Action m x
-          simp_all [VAdd.vadd]
-          exact rfl
+          exact id (Eq.symm h_action_eq)
         }
         have h_concl : Continuous fun x : Y => m +ᵥ x := h_e ▸ h_action_continuous_on_Y_restricted
         exact h_concl

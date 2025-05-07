@@ -1,5 +1,5 @@
 import Mathlib
-import Project.Theorem
+import Project.TheoremExistenceMinimalSubsystems
 
 --
 

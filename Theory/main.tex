@@ -1,0 +1,822 @@
+\documentclass[11pt]{article}
+
+%\usepackage[authoryear,round,sort]{natbib}
+%\bibliographystyle{plainnat}
+\usepackage{fancyhdr}
+\usepackage{bm,amsmath,bbm,amsfonts,nicefrac,latexsym,amsmath,amsfonts,amsbsy,amscd,amsxtra,amsgen,amsopn,bbm,amsthm,amssymb}
+ \usepackage[nottoc,numbib]{tocbibind}
+	
+
+%-----------------------------------------------------------------------------------USER INTRODUCED PACKAGES BEGINS
+
+\usepackage{mathtools}
+\usepackage{accents}
+\usepackage{hyperref}
+\usepackage[normalem]{ulem}
+\usepackage{graphicx}
+\usepackage{upgreek}
+\setlength\headheight{14pt} \addtolength{\textheight}{-54pt}
+\usepackage[colorinlistoftodos]{todonotes}
+\usepackage{etoolbox}
+\apptocmd{\thebibliography}{\raggedright}{}{}
+\usepackage{verbatim}
+\usepackage{titling}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{listings}
+\usepackage{amssymb}
+
+
+\usepackage{color}
+\definecolor{keywordcolor}{rgb}{0.7, 0.1, 0.1}   % red
+\definecolor{tacticcolor}{rgb}{0.0, 0.1, 0.6}    % blue
+\definecolor{commentcolor}{rgb}{0.4, 0.4, 0.4}   % grey
+\definecolor{symbolcolor}{rgb}{0.0, 0.1, 0.6}    % blue
+\definecolor{sortcolor}{rgb}{0.1, 0.5, 0.1}      % green
+\definecolor{attributecolor}{rgb}{0.7, 0.1, 0.1} % red
+
+\def\lstlanguagefiles{lstlean.tex}
+% set default language
+\lstset{language=lean}
+%-----------------------------------------------------------------------------------USER INTRODUCED PACKAGES ENDS
+
+\oddsidemargin 1.2cm
+\topmargin 1.0cm
+\textheight 20.0cm
+\textwidth 15.0cm
+\parindent=0pt
+\parskip 1ex
+\renewcommand{\baselinestretch}{1.1}
+
+
+\pagestyle{fancy}
+\pagenumbering{roman}
+
+
+%-----------------------------------------------------------------------------------USER DEFINED COMMANDS/ENVIRONMENTS BEGINS
+
+\newtheorem{theorem}{Theorem}
+
+\newtheorem{proposition}{Proposition}[section]
+
+\newtheorem{lemma}{Lemma}[section]
+
+\newtheorem{corollary}{Corollary}[section]
+
+\theoremstyle{definition}              % definitions in upright font, with extra space
+\newtheorem{definition}{Definition}[section]
+
+\theoremstyle{definition}              % examples in upright font, with extra space
+\newtheorem{example}{Example}[section]
+
+
+\theoremstyle{definition}              % remarks in upright font, with extra space
+\newtheorem{remark}{Remark}[section]
+
+
+
+
+%-----------------------------------------------------------------------------------USER DEFINED COMMANDS/ENVIRONMENTS ENDS
+
+
+
+
+%-----------------------------------------------------------------------------------HEADER AND TITLE INFORMATION BEGINS
+
+
+
+\lhead{\normalsize \textrm{Formalizing Minimal Systems and Recurrence in Lean 4}}
+\chead{}
+\rhead{\normalsize \textrm{E. Ceglie, L. Zehnder}}
+\lfoot{\normalsize \textrm{}}
+\cfoot{\thepage}
+\rfoot{}
+\setlength{\fboxrule}{4pt}\setlength{\fboxsep}{2ex}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0.4pt}
+
+\title{{\huge\bfseries Formalizing Minimal Systems \\ and Recurrence in Topological Dynamics in Lean 4}}
+\author{%
+  Eric Ceglie\\
+  ETH Zürich, Rämistrasse 101, 8092 Zürich\\
+  \href{mailto:eceglie@student.ethz.ch}{eceglie@ethz.ch}
+  \and
+  Leandro Zehnder\\
+  ETH Zürich, HG J12, Rämistrasse 101, 8092 Zürich\\
+  \href{mailto:lzehnde@student.ethz.ch}{lzehnde@ethz.ch}
+}
+
+
+%-----------------------------------------------------------------------------------HEADER AND TITLE INFORMATION ENDS
+	
+\begin{document}
+
+\maketitle
+
+%-----------------------------------------------------------------------------------ABSTRACT BEGINS
+
+\pagebreak
+\begin{abstract}
+We give a fully machine-checked formalization in Lean 4 using Mathlib 4 of two existence results in compact topological dynamics: the existence of minimal invariant subsystems and the existence of recurrent points under continuous monoid actions. The full code can be found on \href{https://github.com/ericceg/Topological-Dynamics-in-lean4}{github.com/ericceg/Topological-Dynamics-in-lean4}.
+\end{abstract}
+
+
+%-----------------------------------------------------------------------------------ABSTRACT ENDS
+
+
+\pagebreak
+\tableofcontents
+
+\pagebreak
+
+\newpage
+\pagenumbering{arabic}
+%-----------------------------------------------------------------------------------REPORT BODY BEGINS
+
+\section*{Preamble}
+Throughout, we refer to \cite[Section 2]{brin2002introduction} and \cite[Exercises 4.2.1 and 4.2.2]{einsiedler2010ergodic}.
+We would also like to thank Prof. Manfred Einsiedler for introducing the authors to the topic of dynamical systems with his lecture “Dynamical Systems and Ergodic Theory”, held in Spring 2024 at ETH Zurich. Moreover, the authors would like to thank Jaume De Dios Pont for his help and guidance in the Lean implementation. 
+\newpage
+
+
+In all that follows $\mathbb{N}$ shall refer to the non-negative integers and $\mathbb{N}^+:=\mathbb{N} \setminus \{0\}$.
+
+\section{Introduction}\label{chap1}
+We begin with a short introduction to topological dynamics where we are interested in studying so-called \textbf{dynamical systems}.
+
+\begin{definition}[Dynamical system]
+    Let $X$ be a set and $T: X \to X$ be some map. Then we call this a \textbf{dynamical system}.
+\end{definition}
+
+Often we will want to look at a less general setting. One interesting case is the case where $X$ is a topological space (possibly with some additional properties such as compactness) and $T: X \to X$ is continuous (or even a homeomorphism). This is the setting of \textbf{topological dynamics}.
+
+An important concept is that of an \textbf{orbit}. Orbits are usually defined via actions and, in fact, a map $T$ induces an action from $\mathbb{N}$ on $X$ as follows:
+
+\begin{equation}\label{eq1}
+    \forall n \in \mathbb{N}: \forall x \in X: \quad n+x := T^{[n]}(x),
+\end{equation}
+where we iteratively define $T^{[n]}(x)=T \big(T^{[n-1]}(x) \big)$ for all $n \in \mathbb{N}^+$ and $x \in X$ and $T^{[0]}(x)=x$. This now allows us to consider orbits.
+
+\begin{definition}[Orbit]
+    We call the set:
+    \begin{equation}
+        \text{Orb}(x) :=\{y \in X \mid \exists n \in \mathbb{N}: T^{[n]}(x)=y\}
+    \end{equation}
+    the \textbf{orbit} of $x$.
+\end{definition}
+
+We now want to consider so-called \textbf{minimal actions}.
+
+\begin{definition}(Minimal action)
+    $T:X \to X$ is called \textbf{minimal} if every orbit is dense (in $X$).
+\end{definition}
+
+We consider a classical example.
+
+\begin{example}
+    Let $X=\mathbb{R} / \mathbb{Z} \cong \mathbb{S}^1$. Pick $\alpha \in \mathbb{R} \setminus \mathbb{Q}$ some irrational number and consider the corresponding homeomorphism:
+    \begin{equation}
+        T:X \to X, [x] \mapsto [x+\alpha].
+    \end{equation}
+    This is indeed a homeomorphism, and it is a standard fact from topology that for every $n \in \mathbb{N}$ the set of the form
+    \begin{equation}
+        \{x + n \alpha \mod 1 | n \in \mathbb{N} \}
+    \end{equation}
+    is dense in $\mathbb{R}/\mathbb{Z}$. Hence the action induced by this $T$ is minimal on the circle.
+\end{example}
+
+\subsection{A prerequisite result}
+It can be shown (and it is already shown in \verb|Mathlib 4|) that:
+\begin{theorem}\label{thm1}
+    Let $X$ be a compact topological space and let $T: X \to X$ be a homeomorphism. Then the following are equivalent:
+    \begin{enumerate}
+        \item [(a)] $T$ is minimal.
+        \item [(b)] For any $E \subseteq X$ which is closed and  invariant under $T$ (i.e. $T(E) \subseteq E$) we have $E = \varnothing$ or $E=X$.
+    \end{enumerate}
+\end{theorem}
+
+\begin{comment}
+A proof can be found in the lecture notes by Ceglie (see \citep[Prop.~1.13,p.~13]{ceglie}). This was implemented in Mathlib 4 by Kudryashov as follows \citep{kudry}:
+
+\begin{lstlisting}
+class MulAction.IsMinimal (M α : Type*) [Monoid M] [TopologicalSpace α] [MulAction M α] :
+    Prop where
+  dense_orbit : ∀ x : α, Dense (MulAction.orbit M x)
+  
+theorem isMinimal_iff_isClosed_smul_invariant (M G : Type*) {α : Type*} [Monoid M] [Group G] [TopologicalSpace α] [MulAction M α]
+  [MulAction G α] [ContinuousConstSMul M α] :
+    IsMinimal M α ↔ ∀ s : Set α, IsClosed s → (∀ c : M, c • s ⊆ s) → s = ∅ ∨ s = univ
+\end{lstlisting}
+
+Notice that this version of the theorem is written in a much more general way and writing the action as a multiplicative action as opposed to an additive action.
+\end{comment}
+
+This result will come in handy in formulating our new results.
+
+\begin{comment}
+\pagebreak
+\section{Existence of a minimal invariant subsets}
+An immediate consequence of theorem \ref{thm1} is the following:
+
+\begin{theorem}\label{thm2}
+    Let $X$ be a non-empty and compact topological space and $T: X \to X$ a homeomorphism. Then there exists a closed and non-empty $Y \subseteq X$ which is $T-$invariant and such that the action induced by $T|_Y:Y \to Y$ in the sense of equation \ref{eq1} is minimal.
+\end{theorem}
+
+We give a proof from Ceglie's lecture notes (see \citep[Thm.~1.14,pp.~13 ff.]{ceglie}).
+
+\begin{proof}
+    We begin by defining the family:
+    \begin{equation}
+        \mathcal{E}:=\{Y \subseteq X | Y \neq \varnothing, Y \text{ is closed and } TY=Y\}. 
+    \end{equation}
+    Then $X \in \mathcal{E}$ so $\mathcal{E} \neq \varnothing$. Moreover, if $(Y_k)_{k \in I}$ is any chain with respect to $\supseteq$ in $\mathcal{E}$ for some index set $I$, then:
+    \begin{equation}
+        Y^* := \bigcap_{k \in I} Y_k
+    \end{equation}
+    yields a lower bound on the chain. As the chain we picked was arbitrary, by \textbf{Zorn's Lemma} (and using the Axiom of Choice) we get that there exists a minimal element $Y$ of $\mathcal{E}$. But then as an immediate consequence of theorem \ref{thm1} $T|_Y:Y \to Y$ is minimal.
+\end{proof}
+\end{comment}
+
+
+\pagebreak
+\section{Reformulation using Actions}
+
+As \texttt{mathlib4} tries to be as general as possible, we will reformulate the previous definitions and theorems using actions.
+
+\begin{definition}
+A set $M$ equipped with a binary operation $+ \colon M \times M \to M$ is called an \emph{additive monoid} if the following hold:
+\begin{enumerate}
+  \item For all $a,b,c \in M$ we have $(a + b) + c = a + (b + c)$.
+  \item There exists an element $0 \in M$ such that $a + 0 = 0 + a = a$ for all $a \in M$.
+\end{enumerate}
+\end{definition}
+
+\begin{definition}
+An \emph{additive action} of an additive monoid $M$ on a set $X$ is a map 
+\[
+M \times X \to X, \; (m,x) \mapsto mx
+\]
+such that:
+\begin{enumerate}
+  \item For all $x \in X$ we have $0x = x$.
+  \item For all $m,n \in M$ and $x \in X$ we have $(m + n)x = m(n x)$.
+\end{enumerate}
+\end{definition}
+
+Let $M$ be an additive monoid acting on a compact topological space $X$.
+
+\begin{definition}
+For any $x \in X$ define the \emph{orbit} of $x$ by
+\[
+\mathrm{Orb}(x) := \{mx \mid m \in M\}.
+\]
+\end{definition}
+
+\begin{definition}
+$(X, M)$ is called \emph{minimal} if every orbit is dense.
+\end{definition}
+
+This definition is already implemented in \texttt{mathlib4}, see \cite{kudry}.
+
+\begin{lstlisting}
+class AddAction.IsMinimal (M α : Type*) 
+    [AddMonoid M] [TopologicalSpace α] [AddAction M α] : Prop where
+  dense_orbit : ∀ x : α, Dense (AddAction.orbit M x)
+\end{lstlisting}
+
+\begin{definition}
+We say that the action of $M$ on $X$ is \emph{continuous} if for every $m \in M$ the map $X \to X$, $x \mapsto mx$ is continuous.
+\end{definition}
+\pagebreak
+
+\section{Existence of Minimal Subsystems}
+
+The goal of this section is to prove the following theorem.
+
+\begin{theorem}\label{thm:existence-minimal-subsystem}\label{thm2}
+Let $M$ be an additive monoid acting continuously on a non-empty compact topological space $X$. Then there exists a closed non-empty $Y \subseteq X$ such that $M Y \subseteq Y$ and the restricted action 
+\[
+M \times Y \to Y, \; (m,y) \mapsto my\
+\]
+is minimal.
+\end{theorem}
+
+\begin{lstlisting}
+theorem exists_minimal_invariant_subset {M X : Type*} 
+    [h_X_top : TopologicalSpace X] [h_X_compact : CompactSpace X] 
+    [h_X_nonempty : Nonempty X] [h_M_monoid : AddMonoid M] 
+    [h_M_X_action : AddAction M X] 
+    [h_action_continuous : ContinuousConstVAdd M X] :
+    ∃ (Y : Set X) (h_SubAction : AddActionRestriction M X Y),
+    have : AddAction M Y := h_SubAction.SubAction
+    Y.Nonempty ∧
+    IsClosed Y ∧
+    AddAction.IsMinimal M Y
+\end{lstlisting}
+
+We begin by reformulating Theorem \ref{thm1} in our more general setting.
+
+\begin{theorem}\label{prop:minimal-equivalence}
+Let $M$ be an additive monoid acting continuously on a topological space $X$. The following are equivalent:
+\begin{itemize}
+  \item $(X, M)$ is minimal.
+  \item For every closed $M$-invariant subset $E \subseteq X$ we have $E = \emptyset$ or $E = X$.
+\end{itemize}
+\end{theorem}
+
+Conveniently, this reformulation is already implemented in \texttt{mathlib4}, see \cite{kudry}.
+
+\begin{lstlisting}
+theorem isMinimal_iff_isClosed_vadd_invariant (M : Type u_1) 
+    {α : Type u_3} [AddMonoid M] [TopologicalSpace α] 
+    [AddAction M α] [ContinuousConstVAdd M α] :
+    AddAction.IsMinimal M α
+    ↔ ∀ (s : Set α), IsClosed s → (∀ (c : M), c +ᵥ s ⊆ s) → s = ∅ ∨ s = Set.univ
+\end{lstlisting}
+
+
+
+For the proof of Theorem \ref{thm:existence-minimal-subsystem} we need two more lemmas that are not yet implemented in \texttt{mathlib4}.
+
+\begin{lemma}\label{lemma:restricted-action}
+Let $M$ be an additive monoid acting on a set $X$ and let $Y \subseteq X$ be an $M$-invariant subset, i.e. assume that $MY \subseteq Y$. Then the restricted action 
+\[M \times Y \to Y, \; (m,y) \mapsto my\] 
+is a well-defined additive action of $M$ on $Y$.
+\end{lemma}
+
+
+\begin{lstlisting}
+class AddActionRestriction (M : Type*) (X : Type*) (Y : Set X) 
+    [AddMonoid M] [add_action_orig : AddAction M X] where
+    SubAction : AddAction M Y
+    SubAction_eq_Action : ∀ (c : M) (x : Y), ↑(c +ᵥ x) = add_action_orig.vadd c ↑x
+
+def invariant_subset_restricted_action {M X : Type*} {Y : Set X} 
+    [h_M_monoid : AddMonoid M] [h_M_X_action : AddAction M X] 
+    (h_Y_invariant : ∀ c : M, ∀ y ∈ Y, c +ᵥ y ∈ Y) : 
+    AddActionRestriction M X Y
+\end{lstlisting}
+
+
+\begin{lemma}\label{lemma:restricted-action-cont}
+Let $M$ be an additive monoid acting continuously on a compact topological space $X$, and let $Y \subseteq X$ be an $M$-invariant subset. Then the restricted action of $M$ on $Y$ is continuous.
+\end{lemma}
+
+\begin{lstlisting}
+class AddActionRestrictionContinuous (M X : Type*) (Y : Set X) 
+    [h_X_top : TopologicalSpace X]  [h_M_monoid : AddMonoid M] 
+    [h_M_X_action : AddAction M X] 
+    [h_action_continuous : ContinuousConstVAdd M X] where
+    (RestrictedAction : AddActionRestriction M X Y)
+    (SubAction := RestrictedAction.SubAction)
+    (SubActionContinuous : ContinuousConstVAdd M Y)
+
+def restriction_of_continuous_action_is_continuous {M X : Type*} 
+    [h_X_top : TopologicalSpace X]  [h_M_monoid : AddMonoid M] 
+    [h_M_X_action : AddAction M X] 
+    [h_action_continuous : ContinuousConstVAdd M X] (Y : Set X) 
+    (h_Y_invariant : ∀ c : M, ∀ y ∈ Y, c +ᵥ y ∈ Y) : 
+    AddActionRestrictionContinuous M X Y 
+\end{lstlisting}
+
+Besides Lemma \ref{lemma:restricted-action} and Lemma \ref{lemma:restricted-action-cont}, we state some more general results that will be needed and that are already implemented in \texttt{mathlib4}.
+
+\begin{theorem}[Zorn's Lemma]\label{thm:zorn-lemma}
+Let $S$ be a set of subsets of a set $\alpha$. Assume that for every chain $C \subseteq S$ there exists an element $l \in S$ such that 
+\[\forall s \in C: \; l \subseteq s.\]
+Then there exists an element $m \in S$ with 
+\[\forall a \in S: \; a \subseteq m \implies a = m.\]
+\end{theorem}
+
+\begin{lstlisting}
+theorem zorn_superset 
+    {α : Type u_1} (S : Set (Set α)) 
+    (h : ∀ c ⊆ S, IsChain (fun (x1 x2 : Set α) => x1 ⊆ x2) c 
+          → ∃ lb ∈ S, ∀ s ∈ c, lb ⊆ s) :
+    ∃ (m : Set α), Minimal (fun (x : Set α) => x ∈ S) m
+\end{lstlisting}
+
+\begin{theorem}[Cantor's Intersection Theorem]\label{thm:cantor-intersection}
+The intersection of a non-empty directed family of non-empty compact closed sets is non-empty.
+\end{theorem}
+
+\begin{lstlisting}
+theorem IsCompact.nonempty_sInter_of_directed_nonempty_isCompact_isClosed
+    {S : Set (Set X)} [hS : Nonempty S] (hSd : DirectedOn (· ⊇ ·) S) 
+    (hSn : ∀ U ∈ S, U.Nonempty) (hSc : ∀ U ∈ S, IsCompact U) 
+    (hScl : ∀ U ∈ S, IsClosed U) : 
+    (⋂₀ S).Nonempty 
+\end{lstlisting}
+
+\begin{proof}[Proof of Theorem~\ref{thm:existence-minimal-subsystem}]
+Let $M$ be an additive monoid acting on a non-empty compact topological space $X$ and 
+assume that $(X, M)$ is minimal. Define the family 
+\[
+S := \{ Y \subseteq X \mid Y \neq \emptyset, \, Y \text{ closed}, \, M Y \subseteq Y \}.
+\]
+We want to apply Zorn's lemma to find a minimal element in $S$. 
+Let $C \subseteq S$ be any chain.
+Observe that if $C = \emptyset$ then we can take $l := X$ and we are done. Hence we may assume that $C \neq \emptyset$,
+which is important to be able to apply Theorem \ref{thm:cantor-intersection}.
+Now define
+\[
+l := \bigcap_{Y \in C} Y \subseteq X.
+\]
+We verify that $l \in S$. 
+
+\begin{itemize}
+  \item Since for all $Y \in C$ we have $Y \subseteq X$ we obtain $l \subseteq X$. 
+  \item Since $l$ is an intersection of closed sets it is closed. 
+  \item First observe that for every $Y \in C$ we have $Y \in S$ and thus $Y \subseteq X$ and $Y$ is closed 
+    by definition of $S$. Since $X$ is compact this implies that $Y$ is compact. 
+    Moreover, every $Y \in C$ is non-empty by definition of $S$.
+    Hence by Theorem \ref{thm:cantor-intersection} we obtain $l \neq \emptyset$. 
+  \item Let $y \in l$ and $m \in M$ be arbitrary. Then we have 
+    \[
+    \forall Y \in C: \; m y \in Y
+    \]
+    since $C \subseteq S$. This implies 
+    \[
+    m y \in \bigcap_{Y \in C} Y = l.  
+    \]
+    Since $y \in l$ and $m \in M$ were arbitrary we obtain $M l \subseteq l$.
+\end{itemize}
+
+This proves $l \in S$. Moreover, by definition of $l$ we have 
+\[
+\forall Y \in C: \; l \subseteq Y.
+\]
+Hence by Theorem \ref{thm:zorn-lemma} there exists an element $Y \in S$ such that 
+\[
+\forall Z \in S: \; Z \subseteq Y \implies Z = Y. \tag{1}
+\]
+Observe that by definition of $S$ we have $M Y \subseteq Y$ and thus by Lemma \ref{lemma:restricted-action}
+the restricted action 
+\[
+M \times Y \to Y, \; (m, y) \mapsto m y
+\]
+is well-defined. Moreover, since $M$ acts continuously on $X$, by Lemma \ref{lemma:restricted-action-cont} 
+we obtain that the restricted action of $M$ on $Y$ is again continuous. 
+
+We now show that $(Y, M)$ is minimal using Proposition \ref{prop:minimal-equivalence}. 
+Let $E \subseteq Y$ be any closed subset with $M E \subseteq E$ and assume that $E \neq \emptyset$. 
+Then we have $E \in S$ by definition of $S$. Hence using \eqref{eq1} we obtain $E = Y$. 
+This proves that $(Y, M)$ is minimal by Proposition \ref{prop:minimal-equivalence}.
+\end{proof}
+
+The full implementation into Lean 4 can be found on \href{https://github.com/ericceg/Topological-Dynamics-in-lean4/blob/master/Project/Theorem.lean}{github.com/ericceg/Topological-Dynamics-in-lean4}.
+
+
+
+%etc. this part: Generalization, Lean implementation, comments etc.
+\pagebreak
+\section{Recurrent points}\label{recurrentpoints}
+We now want to continue our discussion to recurrent points. Naively we are interested in points $x$ where the orbit of $T$ at that point comes back to it infinitely often. This means that there exists some strictly increasing $(n_k)_{k \in \mathbb{N}} \in \mathbb{N}^\mathbb{N}$ such that:
+\begin{equation}
+    x=\lim_{k \to +\infty} T^{[n_k]}(x),
+\end{equation}
+or more formally:
+
+\begin{definition}(Recurrent point)
+    Let $X$ be a topological space, $T:X \to X$ a homeomorphism. Then $x \in X$ is called a \textbf{(strongly) recurrent point} or \textbf{(strongly) recurrent} if:
+    \begin{equation}
+        x \in \bigcap_{n \in \mathbb{N}} \overline{\text{Orb}(T^{[n]}(x))},
+    \end{equation}
+    where we consider the orbit under the action induced by $T$. The set $\bigcap_{n \in \mathbb{N}} \overline{\text{Orb}(x)}$, written as $\omega^+(x)$ is called the omega-limit of $x$.
+\end{definition}
+
+This definition can also be formulated in a weaker form using an additive monoid $M$ as opposed to $\mathbb{N}$. We will implement this definition as follows in Lean 4:
+
+\begin{lstlisting}
+def StronglyRecurrent {X : Type*} [TopologicalSpace X] {M : Type*} [AddMonoid M] [AddAction M X] (x: X): Prop:=
+    x ∈ ⋂ (m : M), closure (AddAction.orbit M (m + x))
+\end{lstlisting}
+
+We will now be interested in when these recurrent points exist. It is in fact a corollary from theorem \ref{thm2} that the following is true:
+
+\begin{theorem}\label{thm3}
+    Let $X$ be a compact topological space, $T:X \to X$ be a homeomorphism. Then there exists a recurrent point of $X$.
+\end{theorem}
+
+We present a proof from Ceglie's lecture notes (see \citep[Cor.~1.16,p.~13]{ceglie}).
+
+\begin{proof}
+    There exists a closed and non-empty $T-$invariant subspace $Y \subseteq X$ such that $T|_Y:Y \to Y$ is minimal by theorem \ref{thm2}. As $Y$ is non-empty, we may pick $x \in Y$. We claim that $x$ is recurrent. It is clear that $\omega^+(x)$ is $T|_Y-$invariant and closed (the intersection of closed subsets is closed). Thus we also have that $\omega^+(x) \subseteq Y$ and hence by theorem \ref{thm1} we have that:
+    \begin{equation}
+        \omega^+(x) \in \{Y,\varnothing\}.
+    \end{equation}
+    But $\omega^+(x)$ is non-empty! indeed:
+    \begin{equation}
+        \forall n \in \mathbb{N}: \text{Orb}(T^{[n]}(x)) \supseteq \text{Orb}(T^{[n+1]}(x)).
+    \end{equation}
+    Hence this also holds for their closures and thus:
+    \begin{equation}
+        \omega^+(x)=\bigcap_{n \in \mathbb{N}}\text{Orb}(T^{[n]}(x)) \neq \varnothing.
+    \end{equation}
+    Thus we conclude that $\omega^+(x)=Y$ and as $x \in Y$ then $x$ is a recurrent point.
+\end{proof}
+
+Indeed, this proof shows that an action is minimal if and only if every point is recurrent.
+
+\subsection{Implementation in Lean 4}
+The author first tried to implement the proof of theorem \ref{thm3} faithfully and in the strong setting we presented above. This led to a number of problems which we will discuss further on. We remark that a draft for the proof of the theorem in the setting above and following the proof above consists of roughly 300 lines of code. The revised and completed version of the proof that works in a more general setting only consists of roughly 150 lines of code. The full code can be found on \href{https://github.com/ericceg/Topological-Dynamics-in-lean4/blob/master/Project/Corollary.lean}{github.com/ericceg/Topological-Dynamics-in-lean4}.
+
+We prove the following revised version of theorem \ref{thm3}:
+
+\begin{theorem}
+    Let $X$ be a compact, non-empty topological space and let $M$ be an additive monoid acting continuously on $X$ from the left. Then there exists a recurrent point $x \in X$ of that action.
+\end{theorem}
+
+This theorem is implemented in Lean 4 as follows:
+
+\begin{lstlisting}
+theorem exists_strongly_recurrent
+  {X : Type*} [TopologicalSpace X] [CompactSpace X] [Nonempty X]
+  {M : Type*} [AddMonoid M]
+  [ContinuousAddAction M X] :
+  ∃ x, StronglyRecurrent (M := M) (X := X) x
+\end{lstlisting}
+
+We use the definition of strongly recurrent as we gave it in section \ref{recurrentpoints} above. Henceforth in this chapter $X$ shall always denote an arbitrary but non-empty and compact topological space and $M$ shall be a monoid acting additively and continuously from the left on $X$.
+
+The proof now works differently to how it worked in the naive case. We have split it up into multiple lemmata. We first show that if an action is minimal, all points are recurrent.
+
+\begin{lemma}\label{lem1}
+    If the action of $M$ on $X$ is minimal, then every point of $X$ is strongly recurrent.
+\end{lemma}
+
+Notice that we used this in the naive proof above but for the action induced by $T|_Y$ in the setting above. The proof of this theorem relies on theorem \ref{thm1}. Indeed it suffices to show that for all $x \in X$:
+\begin{equation}
+    \forall m \in M: x \in \overline{\text{Orb}(m+x)}.
+\end{equation}
+But by minimality of the action we immediately know:
+\begin{equation}
+    \forall m \in M:\overline{\text{Orb}(m+x)}=X,
+\end{equation}
+using theorem \ref{thm1} or in the case of the Lean implementation (see \cite{kudry}):
+
+\begin{lstlisting}
+theorem MulAction.dense_orbit [IsMinimal M α] (x : α) : Dense (orbit M x)
+\end{lstlisting}
+
+The Lean 4 implementation of lemma \ref{lem1} is:
+
+\begin{lstlisting}
+lemma Minimal_strongly_recurrent (x : X)
+    [AddAction.IsMinimal M X] :
+    StronglyRecurrent (M := M) x
+\end{lstlisting}
+
+A tedious issue when we tried to implement the naive code was dealing with conversions from points in a subspace to the upstairs points or with subactions of actions on subspaces. This partially explains the length of the naive proof as we have to tell Lean at every usage of one of these translations (which are obvious to the mathematician) that they are indeed true and provide it with a proof.
+
+We provide some examples. The following code snippets serve to illustrate the inconvenience of dealing with subspaces and subactions in a strict setting as the one we tried to implement here. 
+
+In the following snippet we obtain our subspace $Y$ as we did in the proof above using theorem \ref{thm2}. We then need to tell Lean that there is a subaction on that space and what it is. Then we get to pick our point in $Y$ using that it is non-empty. But this we do by picking a point ($x$ in the code below) in the set $X$ with the hypothesis that $x \in Y$. We then need to define a new point $x'$ as an element of $Y$ which is equal to $x$ upstairs.
+
+\begin{lstlisting}
+...
+obtain ⟨Y, hSubAction, hY_nonempty, hY_closed, hY_minimal⟩ :=
+  exists_minimal_invariant_subset (M := ℕ) (X := X)
+
+let _ : AddAction ℕ Y := hSubAction.SubAction
+
+-- Y is not empty, so there exists some element, call it x
+  obtain ⟨x, hx⟩ := hY_nonempty
+...
+let x' : Y := ⟨x, hx⟩
+...
+\end{lstlisting}
+
+This serves to illustrate some of the problems arising from trying to deal with subspaces as one would in usual mathematics. Another example is:
+
+\begin{lstlisting}
+    change Subtype.val (c + z) ∈ Z
+    rw [hSubAction.SubAction_eq_Action c z]
+\end{lstlisting}
+where we use the lemma:
+\begin{lstlisting}
+    hSubAction.SubAction_eq_Action : ∀ c (y : Y), ↑(c + y) = c + (y : X)
+\end{lstlisting}
+This effectively means rewriting $\uparrow$ \verb|(c + z)| to \verb|c + (z : X)| or as one would write naively:
+\begin{equation}
+    \forall m \in M \forall z \in Y: m+z = m+z,
+\end{equation}
+but where the left $+$ is the additive action of $M$ on $Y$ and the $+$ on the right is the additive action of $M$ on $X$ and on the left we consider $z$ as an element of $Y \subseteq X$ and on the right we consider $z$ as an element of $X$.
+
+\begin{remark} [The coercion operator $\uparrow$]
+A set in Lean does not consist of elements as it does in naive set theory or even ZFC\footnote{Even in ZFC a set is still defined by its element. This is the axiom of existentionality: $\forall x \forall y (\forall z: z \in x \iff z \in y) \implies x=y$.}. A set is actually a collection of things with proofs that they lie in some set. For example, the information that $x \in Y$ (where $Y \subseteq X)$ would be displayed by $\langle$\verb|x, hxY|$\rangle$, where \verb|x| would be some point $x \in X$ (or in Lean notation: \verb|x : X|) and \verb|hxY| is a proof that $x \in Y$. The \textbf{coercion operator} now allows us to move between the two. Now if $y \in Y$ is defined as an element of $Y$ and we know that $Y \subseteq X$ then $\uparrow$ \verb|y| makes \verb|y| into an element of $X$.
+\end{remark}
+
+Now in our new and improved proof we want to minimize issues and difficulty arising from this. We therefore use two lemmata. A first one says that if $X$ and $M$ are again as usual, any point of $Y$ is strongly recurrent under a minimal action on $Y$. Its Lean 4 implementation is:
+
+\begin{lstlisting}
+lemma StronglyRecurrent.of_minimal_subaction
+    {X : Type*} [TopologicalSpace X]
+    {M : Type*} [AddMonoid M] [AddAction M X]
+    {Y : Set X} [MySubAddAction M X Y]
+    (hmin: AddAction.IsMinimal M Y)
+    {y : Y} :
+  StronglyRecurrent (M := M) (X := X) (y : X)
+\end{lstlisting}
+
+We then go on to show a second lemma, which says that if a point $y \in Y$ is strongly recurrent (notice that this means that $y$ is recurrent with respect to the downstairs action $M \times Y \to Y$) then $y$ (but now as an element of $X$) is also strongly recurrent with respect to the upstairs action $M \times X \to X$. The Lean 4 implementation looks as follows:
+
+\pagebreak
+
+\begin{lstlisting}
+lemma StronglyRecurrent.of_subaction
+    {X : Type*} [TopologicalSpace X]
+    {M : Type*} [AddMonoid M] [AddAction M X]
+    {Y : Set X} [MySubAddAction M X Y]
+    {y : Y}
+    (hy : StronglyRecurrent (M := M) (X := Y) y) :
+  StronglyRecurrent (M := M) (X := X) (y : X)
+\end{lstlisting}
+
+This is again "trivial" to a human mathematician as the orbit of $y$ under the downstairs action $M \times Y \to Y$ is the "same" as the orbit under the upstairs action $M \times X \to X$, so it makes sense that the recurrent property is unchanged. We remark that this lemma still has to deal with the difficulties we discussed. In fact the exact same argument is found in its proof, namely:
+
+\begin{lstlisting}
+    have h1 : ↑(m +ᵥ y : Y) = m +ᵥ (y : X) :=
+            MySubAddAction.SubAction_eq_Action m y
+\end{lstlisting}
+
+We summarize the two lemmata in regular mathematical terms.
+
+\begin{lemma}[StronglyRecurrent.of minimal subaction]\label{lem2}
+    Let $Y \subseteq X$ and assume that the subaction $M \times Y \to Y$ is minimal, then every point of $Y$ is strongly recurrent.
+\end{lemma}
+
+\begin{lemma}[StronglyRecurrent.of subaction]\label{lem3}
+    Let $Y \subseteq X$ be non-empty, let $y \in Y$ and assume that $y$ is a strongly recurrent point of the subaction $M \times Y \to Y$. Then $y$ is also a strongly recurrent point of the action $M \times X \to X$.
+\end{lemma}
+
+Notice that if we combine the two lemmata, we get immediately that:
+
+\begin{corollary}
+    Let $Y \subseteq X$ and assume that the subaction $M \times Y \to Y$ is minimal, then every point of $Y$ is a strongly recurrent point of the action $M \times X \to X$.
+\end{corollary}
+
+This consequence is immediate and did not require an explicit formulation as a separate theorem. We are not able to understand the full proof of our theorem.
+
+\begin{lstlisting}
+theorem exists_strongly_recurrent
+  {X : Type*} [TopologicalSpace X] [CompactSpace X] [Nonempty X]
+  {M : Type*} [AddMonoid M]
+  [ContinuousAddAction M X] :
+  ∃ x, StronglyRecurrent (M := M) (X := X) x := by {
+\end{lstlisting}
+The proof begins by applying theorem \ref{thm1} to obtain a non-empty, closed subset Y of X such that the subaction $M \times Y \to Y$ on Y is minimal.
+\begin{lstlisting}
+  obtain ⟨Y, hSubAction, hY_nonempty, hY_closed, hY_minimal⟩ :=
+  exists_minimal_invariant_subset (M := M) (X := X)
+\end{lstlisting}
+We then invoke the hypothesis that $Y \neq \varnothing$ to obtain a point $x_0 \in X$ together with a proof of the proposition $x_0 \in Y$. 
+\begin{lstlisting}
+  obtain ⟨x0, hx0Y⟩ := hY_nonempty
+\end{lstlisting}
+Now, $x_0$ is formally not a point of $Y$. So we call $y \in Y$ the element of $Y$ which lifts to $x_0$, i.e. $\uparrow$\verb|y = x0|. A human mathematician would omit this step as it boils down to just saying $y:=x_0$.
+\begin{lstlisting}
+  let y : Y := ⟨x0, hx0Y⟩
+\end{lstlisting}
+Now, we establish that the action $M \times Y \to Y$ is minimal. This is just using one of the properties of $Y$ we got from applying theorem \ref{thm1}.
+\begin{lstlisting}
+  haveI : AddAction.IsMinimal M Y := hY_minimal
+\end{lstlisting}
+We can now apply lemma \ref{lem2} (which in Lean we called \verb|Minimal_strongly_recurrent|) to show that the point $y$ is a recurrent point of the subaction.
+\begin{lstlisting}
+  have hy_recurrent_in_Y :
+    StronglyRecurrent (M := M) (X := Y) y :=
+    Minimal_strongly_recurrent y
+\end{lstlisting}
+We can then apply lemma \ref{lem3} (which in Lean we called \verb|StronglyRecurrent.of_subaction|) to show that the point $x_0$ is a recurrent point of the upstairs action.
+\begin{lstlisting}
+  have hx_recurrent_in_X :
+    StronglyRecurrent (M := M) (X := X) (y : X) :=
+      StronglyRecurrent.of_subaction hy_recurrent_in_Y
+\end{lstlisting}
+We can then conclude as $x_0$ is a recurrent point of the upstairs action, which is whose existence we wanted to show.
+\begin{lstlisting}
+  use x0
+}
+\end{lstlisting}
+
+\subsection{A recurrent point of the subaction is recurrent}
+The core of the proof is lemma \ref{lem3} which says that if $y \in Y$ is a strongly recurrent point of the action $M \times Y \to Y$, then $y$ (but viewed as an element of $X$ or even more specifically, the element of $X$ to which $y$ is lifted by the coercion operator) is also a strongly recurrent point of the upstairs action $M \times X \to X$.
+
+This is the core of the proof because it is the most opaque in the sense that it seems really trivial, which makes it the hardest part to implement in Lean.
+
+The author would like to thank Jaume De Dios Pont for his implementation of this lemma.
+
+We again walk through this proof line by line.
+
+\begin{lstlisting}
+lemma StronglyRecurrent.of_subaction
+    {X : Type*} [TopologicalSpace X]
+    {M : Type*} [AddMonoid M] [AddAction M X]
+    {Y : Set X} [MySubAddAction M X Y]
+    {y : Y}
+    (hy : StronglyRecurrent (M := M) (X := Y) y) :
+  StronglyRecurrent (M := M) (X := X) (y : X) := by {
+
+\end{lstlisting}
+We begin by writing out the definition of strong recurrence. This turns the goal from $\vdash$\verb|StronglyRecurrent|$\uparrow$ \verb|y| into $\vdash \forall$\verb|(i : M),|$\uparrow$\verb|y|$\in$\verb|closure (AddAction.orbit M (i+|$\uparrow$\verb|y))|.
+\begin{lstlisting}
+    apply Set.mem_iInter.2
+\end{lstlisting}
+We want to show the new goal. For this we pick an arbitrary $m \in M$.
+\begin{lstlisting}
+    intro m
+\end{lstlisting}
+We have as part of our assumption that $y \in Y$ is a strongly recurrent point. Hence we know that $\forall m \in M:y \in  \overline{\text{Orb}(m+y)}$, where the action is $M \times Y \to Y, (n,z) \mapsto n+z$ but for $z=m+y$. Notice that the orbit (and its closure) are then subsets of $Y$. Here we now show that $y \in \overline{\text{Orb}(m+y)}$ but where $y$ is viewed as an element of $X$ and the orbit is viewed as the orbit of the action $M \times X \to X$, so is a subset of $X$. We use:
+\begin{lstlisting}
+/--closure_subtype :
+  ∀ {α : Type*} [TopologicalSpace α] {s : Set S} (t : Set S),
+  closure (t : Set α) = closure ((Subtype.val : S → α) '' t)-/
+\end{lstlisting}
+which is now applied as follows:
+\begin{lstlisting}
+    have hX' : (y : X) ∈
+      closure ((Subtype.val) '' (AddAction.orbit M (m + y) : Set Y)) :=
+        (closure_subtype).1 ((Set.mem_iInter.1 hy) m)
+\end{lstlisting}
+We now show that the lift of the orbit of $m+y$ (where $y$ is viewed as an element of $Y$) under the action $M \times Y \to Y$ (which is a subset of $X$) is actually a subset of the orbit of $m+\uparrow y$ (so where $\uparrow y$ is the lift of $y$, i.e. now an element of $X$) under the action $M \times X \to X$. It is not hard to see, that actually there is equality here. But we won't need that.
+\begin{lstlisting}
+    have hsubset :
+        (Subtype.val) '' (AddAction.orbit M (m + y) : Set Y) ⊆
+        (AddAction.orbit M (m + (y : X)) : Set X) := by
+      rintro z ⟨z', ⟨c, rfl⟩, rfl⟩
+\end{lstlisting}
+We first bring up the action. We do this in two steps. First we show that if $y \in Y$ is an element of $Y$, then the lift of $m+y$ is the same as $m+$ the lift of $y$.
+\begin{lstlisting}
+      have h1 : ↑(m + y : Y) = m + (y : X) :=
+            MySubAddAction.SubAction_eq_Action m y
+\end{lstlisting}
+Next, if $y$ is viewed as an element in $Y$ then $m+y$ is also viewed as an element of $Y$ because Lean uses the action $M \times Y \to Y$. So we want to show that the lift of $c+(m+y)$ is the same as $c+$ the lift of $m+y$.
+\begin{lstlisting}
+      have h2 : ↑(c + (m + y) : Y) = c + ((m + y):X) :=
+        MySubAddAction.SubAction_eq_Action c (m + y)
+\end{lstlisting}
+We apply hypothesis \verb|h1| to change the hypothesis \verb|h2|. Right now the hypothesis looks like: \verb|have h2 : |$\uparrow$\verb|(c + (m + y) : Y) = | \verb|c + ((m + y):X)|. We use a rewrite to change it into: $\uparrow$\verb|(c + m + y) = c + m + |$\uparrow$\verb|y|.
+\begin{lstlisting}
+      rw [h1] at h2
+\end{lstlisting}
+We use \verb|h2| to obtain the inequality in the hypothesis \verb|hrewrite|:
+\begin{lstlisting}
+      have hrewrite : ↑(c + (m + y) : Y) = c + m + (y : X) := h2
+\end{lstlisting}
+Now, we see that the right-hand side of \verb|hrewrite| is just the ambient orbit upstairs in $X$.
+\begin{lstlisting}
+      have : (c + (m + (y : X)))
+          ∈ (AddAction.orbit M (m + (y : X)) : Set X) := ⟨c, rfl⟩
+\end{lstlisting}
+This \verb|simp| completes the proof of hypothesis \verb|hsubset|.
+\begin{lstlisting}
+      simp [hrewrite]
+\end{lstlisting}
+We have now nearly shown what we claimed. We have shown that all the downstairs orbits are contained in the upstairs orbit. But we need to show the analogous thing for the respective closures of the orbits. Here, we use the theorem:
+\begin{lstlisting}
+    /--theorem closure_mono (h : s ⊆ t) : closure s ⊆ closure t-/
+\end{lstlisting}
+from the Mathlib 4 library to conclude.
+\begin{lstlisting}
+    exact (closure_mono hsubset) hX'
+}
+\end{lstlisting}
+
+The full implementation into Lean 4 can be found on \href{https://github.com/ericceg/Topological-Dynamics-in-lean4/blob/master/Project/Corollary.lean}{github.com/ericceg/Topological-Dynamics-in-lean4}.
+
+
+
+%-----------------------------------------------------------------------------------REPORT BODY ENDS
+
+\newpage
+
+
+\bibliographystyle{alpha} % or "alpha", "abbrv", "ieeetr", etc.
+\bibliography{references}
+
+
+\begin{comment}
+\begin{thebibliography}{999}
+
+\bibitem[Ceglie, 2024]{ceglie}
+Ceglie, Eric (2024).
+\textit{Dynamical Systems and Ergodic Theory Lecture Notes}
+
+\bibitem[Kudryashov, 2021]{kudry}
+Kudryashov, Yury (2021).
+\textit{Minimal.lean: Mathlib 4, Dynamics, Topological Entropy, \href{https://github.com/leanprover-community/mathlib4/blob/master/Mathlib/Dynamics/Minimal.lean}{https://github.com/Minimal.lean}, accessed 2025-05-06}
+
+%\bibitem[author(year)]{cite-key}{
+%author (year) {\it title} edition, publication information - see library website for precise details
+%}
+
+\end{thebibliography}
+\end{comment}
+
+\end{document}
+
+
+
+
+

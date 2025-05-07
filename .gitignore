@@ -1,5 +1,15 @@
 *.pdf
 
+/hist
+
 .DS_Store
 
 /.lake
+
+*.aux
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.toc
+*.synctex.gz
