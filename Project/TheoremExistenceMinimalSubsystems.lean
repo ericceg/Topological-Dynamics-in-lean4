@@ -14,7 +14,7 @@ class AddActionRestriction (M : Type*) (X : Type*) (Y : Set X)
 
 
 /--
-Lemma 13. Let M be an additive monoid acting on a set X and let Y ⊆ X be an M-
+Lemma 3.3. Let M be an additive monoid acting on a set X and let Y ⊆ X be an M-
 invariant subset, i.e. assume that MY ⊆ Y. Then the restricted action
 M × Y → Y , (m, y) ↦ my
 is a well-defined additive action of M on Y.
@@ -50,7 +50,7 @@ class AddActionRestrictionContinuous (M X : Type*) (Y : Set X) [h_X_top : Topolo
 
 
 /--
-Lemma 14. Let M be an additive monoid acting continuously on a compact topological
+Lemma 3.4. Let M be an additive monoid acting continuously on a compact topological
 space X and let Y ⊆ X be an M-invariant subset. Then the restricted action of M on Y is
 continuous.
 -/
@@ -95,7 +95,7 @@ def restriction_of_continuous_action_is_continuous {M X : Type*} [h_X_top : Topo
 
 
 /--
-Theorem 11. Let M be an additive monoid acting continuously on a non-empty compact
+Theorem 3.1. Let M be an additive monoid acting continuously on a non-empty compact
 topological space X. If (M, X) is minimal then there exists a closed non-empty Y ⊆ X such
 that MY ⊆ Y and the restricted action
 M × Y → Y, (m, y) ↦ my
@@ -207,7 +207,6 @@ theorem exists_minimal_invariant_subset {M X : Type*}
 
           -- show ∀ s ∈ C: l ⊆ s
           · intro s h_s_in_C
-            unfold sInter
             exact fun ⦃a⦄ a ↦ a s h_s_in_C -- obtained this using `hint`
         )
       obtain ⟨Y, hY, hY_minimal⟩ := h_existence_minimal_element
@@ -226,7 +225,7 @@ theorem exists_minimal_invariant_subset {M X : Type*}
     have h_Y_nonempty := h_Y_in_S.2.1
     have h_Y_inv := h_Y_in_S.2.2
 
-    -- obtain restricted action (and use Lemma 14)
+    -- obtain restricted action (and use Lemma 3.4)
     let RestrictedActionContinuous := restriction_of_continuous_action_is_continuous Y h_Y_inv
     let h_subaction_continuous := RestrictedActionContinuous.SubActionContinuous
     let RestrictedAction := RestrictedActionContinuous.RestrictedAction
@@ -236,7 +235,7 @@ theorem exists_minimal_invariant_subset {M X : Type*}
     use h_Y_nonempty
     use h_Y_isClosed
 
-    -- apply Proposition 12
+    -- apply Theorem 3.2
     have h1 := @isMinimal_iff_isClosed_vadd_invariant M Y h_M_monoid instTopologicalSpaceSubtype SubAction h_subaction_continuous
     have h1 := h1.2
     apply h1
