@@ -1,0 +1,36 @@
+Read me: Implement Lean 4 in LaTeX:
+
+You need:
+
+\usepackage{verbatim}
+\usepackage{titling}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{listings}
+\usepackage{amssymb}
+
+\usepackage{color}
+\definecolor{keywordcolor}{rgb}{0.7, 0.1, 0.1}   % red
+\definecolor{tacticcolor}{rgb}{0.0, 0.1, 0.6}    % blue
+\definecolor{commentcolor}{rgb}{0.4, 0.4, 0.4}   % grey
+\definecolor{symbolcolor}{rgb}{0.0, 0.1, 0.6}    % blue
+\definecolor{sortcolor}{rgb}{0.1, 0.5, 0.1}      % green
+\definecolor{attributecolor}{rgb}{0.7, 0.1, 0.1} % red
+
+\def\lstlanguagefiles{lstlean.tex}
+% set default language
+\lstset{language=lean}
+
+In your preamble.
+
+Then you need to add the file lstlean.tex to your document.
+
+You can then copy-paste Lean code into your LaTeX document inside of a:
+\begin{lstlisting}
+[YOUR CODE GOES HERE]
+\end{lstlisting}
+Environment.
+
+:)
+
+If you have questions, ask lzehnde@student.ethz.ch
